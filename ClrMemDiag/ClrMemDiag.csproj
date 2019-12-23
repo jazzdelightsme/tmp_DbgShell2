@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>Microsoft.Diagnostics.Runtime</AssemblyName>
+    <RootNamespace>Microsoft.Diagnostics.Runtime</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Platforms>x64;x86</Platforms>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <!-- <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir> -->
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <OutputPath>..\bin\Debug\x64\Debugger</OutputPath>
+    <DocumentationFile>$(OutputPath)\Microsoft.Diagnostics.Runtime.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <OutputPath>..\bin\Release\x64\Debugger</OutputPath>
+    <DocumentationFile>$(OutputPath)\Microsoft.Diagnostics.Runtime.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <OutputPath>..\bin\Debug\x86\Debugger</OutputPath>
+    <DocumentationFile>$(OutputPath)\Microsoft.Diagnostics.Runtime.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>..\bin\Release\x86\Debugger</OutputPath>
+    <DocumentationFile>$(OutputPath)\Microsoft.Diagnostics.Runtime.xml</DocumentationFile>
+  </PropertyGroup>
+
+</Project>
