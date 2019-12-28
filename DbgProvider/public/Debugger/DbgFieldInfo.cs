@@ -4,6 +4,8 @@ using Ms.Dbg;
 
 namespace MS.Dbg
 {
+    // TODO: move this file to typeinfo dir?
+
     /// <summary>
     ///    Represents a field in a type.
     /// </summary>

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -26,6 +26,20 @@
     <OutputPath>..\bin\Release\x86\Debugger</OutputPath>
     <DocumentationFile>$(OutputPath)\DbgProvider.xml</DocumentationFile>
   </PropertyGroup>
+  <ItemGroup>
+    <Compile Remove="public\Debugger\DbgEventCallback.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="public\Debugger\DbgEventCallback.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.0.0-rc.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ClrMemDiag\ClrMemDiag.csproj" />
+    <ProjectReference Include="..\DbgEngWrapper\DbgEngWrapper.vcxproj" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <None Update="Debugger.ArgumentCompleters.ps1">
@@ -104,4 +118,14 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="powershell.exe -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy RemoteSigned -Command &quot;$LastExitCode = -1; . '$(ProjectDir)PostBuild.ps1' '$(ProjectDir)' '$(PlatformName)' '$(TargetDir)'; exit $LastExitCode&quot;" />
+  </Target>
+
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="cscript.exe &quot;$(SolutionDir)xslTransform.js&quot; //NOLOGO &quot;$(ProjectDir)Resources.resx&quot; &quot;$(SolutionDir)ResourcesTransform.xslt&quot; &gt; &quot;$(ProjectDir)Resources.cs&quot;" />
+  </Target>
 </Project>
