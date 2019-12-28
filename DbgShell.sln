@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DbgNativeUtil", "DbgNativeU
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DbgProvider", "DbgProvider\DbgProvider.csproj", "{CA41600E-BDFD-488B-ABCC-808816B848D2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbgShell", "DbgShell\DbgShell.csproj", "{9E780265-6B71-48C7-9DAB-259B18E33632}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +63,16 @@ Global
 		{CA41600E-BDFD-488B-ABCC-808816B848D2}.Release|x64.Build.0 = Release|x64
 		{CA41600E-BDFD-488B-ABCC-808816B848D2}.Release|x86.ActiveCfg = Release|x86
 		{CA41600E-BDFD-488B-ABCC-808816B848D2}.Release|x86.Build.0 = Release|x86
+		{9E780265-6B71-48C7-9DAB-259B18E33632}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{9E780265-6B71-48C7-9DAB-259B18E33632}.Debug|x64.ActiveCfg = Debug|x64
+		{9E780265-6B71-48C7-9DAB-259B18E33632}.Debug|x64.Build.0 = Debug|x64
+		{9E780265-6B71-48C7-9DAB-259B18E33632}.Debug|x86.ActiveCfg = Debug|x86
+		{9E780265-6B71-48C7-9DAB-259B18E33632}.Debug|x86.Build.0 = Debug|x86
+		{9E780265-6B71-48C7-9DAB-259B18E33632}.Release|Any CPU.ActiveCfg = Release|x86
+		{9E780265-6B71-48C7-9DAB-259B18E33632}.Release|x64.ActiveCfg = Release|x64
+		{9E780265-6B71-48C7-9DAB-259B18E33632}.Release|x64.Build.0 = Release|x64
+		{9E780265-6B71-48C7-9DAB-259B18E33632}.Release|x86.ActiveCfg = Release|x86
+		{9E780265-6B71-48C7-9DAB-259B18E33632}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
