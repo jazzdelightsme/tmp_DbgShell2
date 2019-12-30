@@ -167,86 +167,6 @@ namespace MS.DbgShell
             }
         }
 
-        // Error colors
-        public ConsoleColor ErrorForegroundColor
-        {
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            get { return errorForegroundColor; }
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            set { errorForegroundColor = value; }
-        }
-        public ConsoleColor ErrorBackgroundColor
-        {
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            get { return errorBackgroundColor; }
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            set { errorBackgroundColor = value; }
-        }
-
-        // Warning colors
-        public ConsoleColor WarningForegroundColor
-        {
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            get { return warningForegroundColor; }
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            set { warningForegroundColor = value; }
-        }
-        public ConsoleColor WarningBackgroundColor
-        {
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            get { return warningBackgroundColor; }
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            set { warningBackgroundColor = value; }
-        }
-
-        // Debug colors
-        public ConsoleColor DebugForegroundColor
-        {
-
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            get { return debugForegroundColor; }
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            set { debugForegroundColor = value; }
-        }
-        public ConsoleColor DebugBackgroundColor
-        {
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            get { return debugBackgroundColor; }
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            set { debugBackgroundColor = value; }
-        }
-
-        // Verbose colors
-        public ConsoleColor VerboseForegroundColor
-        {
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            get { return verboseForegroundColor; }
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            set { verboseForegroundColor = value; }
-        }
-        public ConsoleColor VerboseBackgroundColor
-        {
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            get { return verboseBackgroundColor; }
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            set { verboseBackgroundColor = value; }
-        }
-
-        // Progress colors
-        public ConsoleColor ProgressForegroundColor
-        {
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            get { return progressForegroundColor; }
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            set { progressForegroundColor = value; }
-        }
-        public ConsoleColor ProgressBackgroundColor
-        {
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            get { return progressBackgroundColor; }
-            [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-            set { progressBackgroundColor = value; }
-        }
 
         //If this is true, class throws on read or prompt method which require
         //access to console.
@@ -1272,8 +1192,8 @@ namespace MS.DbgShell
             message = HostUtilities.RemoveGuidFromMessage(message, out unused);
             // NTRAID#Windows OS Bugs-1061752-2004/12/15-sburns should read a skin setting here...
             WriteWrappedLine(
-                debugForegroundColor,
-                debugBackgroundColor,
+                DebugForegroundColor,
+                DebugBackgroundColor,
                 Util.Sprintf(debugFormatString, message));
         }
 
@@ -1313,8 +1233,8 @@ namespace MS.DbgShell
         public override void WriteVerboseLine(string message)
         {
             WriteWrappedLine(
-                verboseForegroundColor,
-                verboseBackgroundColor,
+                VerboseForegroundColor,
+                VerboseBackgroundColor,
                 Util.Sprintf(verboseFormatString, message));
         }
 
@@ -1396,25 +1316,34 @@ namespace MS.DbgShell
                 : parent.StandardErrorWriter;
 
             if (writer == parent.ConsoleTextWriter)
-                WriteLine(errorForegroundColor, errorBackgroundColor, value);
+                WriteLine(ErrorForegroundColor, ErrorBackgroundColor, value);
             else
                 parent.StandardErrorWriter.Write(value + Crlf);
         }
 
-        private ConsoleColor errorForegroundColor = ConsoleColor.Red;
-        private ConsoleColor errorBackgroundColor = ConsoleColor.Black;
+        // Format colors
+        public ConsoleColor FormatAccentColor { get; set; } = ConsoleColor.Green;
 
-        //private ConsoleColor warningForegroundColor = ConsoleColor.Yellow; [danthom] customized in .Other file
-        //private ConsoleColor warningBackgroundColor = ConsoleColor.Black; [danthom] customized in .Other file
+        // Error colors
+        public ConsoleColor ErrorAccentColor { get; set; } = ConsoleColor.Cyan;
+        public ConsoleColor ErrorForegroundColor { get; set; } = ConsoleColor.Red;
+        public ConsoleColor ErrorBackgroundColor { get; set; } = Console.BackgroundColor;
 
-        private ConsoleColor debugForegroundColor = ConsoleColor.Yellow;
-        private ConsoleColor debugBackgroundColor = ConsoleColor.Black;
+        // Warning colors
+        //public ConsoleColor WarningForegroundColor { get; set; } = ConsoleColor.Yellow; [danthom] customized in .Other file
+        //public ConsoleColor WarningBackgroundColor { get; set; } = Console.BackgroundColor; [danthom] customized in .Other file
 
-        private ConsoleColor verboseForegroundColor = ConsoleColor.Yellow;
-        private ConsoleColor verboseBackgroundColor = ConsoleColor.Black;
+        // Debug colors
+        public ConsoleColor DebugForegroundColor { get; set; } = ConsoleColor.Yellow;
+        public ConsoleColor DebugBackgroundColor { get; set; } = Console.BackgroundColor;
 
-        private ConsoleColor progressForegroundColor = ConsoleColor.Yellow;
-        private ConsoleColor progressBackgroundColor = ConsoleColor.DarkCyan;
+        // Verbose colors
+        public ConsoleColor VerboseForegroundColor { get; set; } = ConsoleColor.Yellow;
+        public ConsoleColor VerboseBackgroundColor { get; set; } = Console.BackgroundColor;
+
+        // Progress colors
+        public ConsoleColor ProgressForegroundColor { get; set; } = ConsoleColor.Yellow;
+        public ConsoleColor ProgressBackgroundColor { get; set; } = ConsoleColor.DarkCyan;
 
         #endregion Line-oriented interaction
 

@@ -11,8 +11,8 @@ namespace MS.DbgShell
     internal partial class ColorHostUserInterface : System.Management.Automation.Host.PSHostUserInterface
     {
 
-        private ConsoleColor warningForegroundColor = ConsoleColor.Black;
-        private ConsoleColor warningBackgroundColor = ConsoleColor.Yellow;
+        public ConsoleColor WarningForegroundColor { get; set; } = ConsoleColor.Black;
+        public ConsoleColor WarningBackgroundColor { get; set; } = ConsoleColor.Yellow;
 
         private bool TryInvokeUserDefinedReadLine(out string input, bool useUserDefinedCustomReadLine)
         {
