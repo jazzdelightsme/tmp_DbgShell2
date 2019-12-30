@@ -698,15 +698,19 @@ namespace MS.DbgShell
 
         private InitialSessionState m_runspaceConfig;
 
+        private IList< InitScript > m_initScripts;
+
         // This interceptor functions as the "backstop" that prevents CTRL-C from killing
         // the whole app if you press it while just sitting at a prompt.
         private CtrlCInterceptor m_ctrlCBackstop;
 
         public ColorConsoleHost( InitialSessionState runspaceConfig,
+                                 IList< InitScript > initScripts,
                                  string banner,
                                  string[] args )
         {
             m_runspaceConfig = runspaceConfig;
+            m_initScripts = initScripts;
             m_ctrlCBackstop = new CtrlCInterceptor( _CtrlCBackstopHandler, true );
             m_ui = new ColorHostUserInterface( this );
 
@@ -1198,6 +1202,7 @@ namespace MS.DbgShell
 
 
         internal static int Start( InitialSessionState initialSessionState,
+                                   IList< InitScript > initScripts,
                                    string bannerText,
                                    string helpText, // TODO: what to do with this?
                                    string[] args )
@@ -1212,7 +1217,10 @@ namespace MS.DbgShell
             }
             try
             {
-                using( var host = new ColorConsoleHost( initialSessionState, bannerText, args ) )
+                using( var host = new ColorConsoleHost( initialSessionState,
+                                                        initScripts,
+                                                        bannerText,
+                                                        args ) )
                 {
                     var cpp = new CommandLineParameterParser( host, bannerText, helpText );
                     cpp.Parse( args );
@@ -1275,44 +1283,40 @@ namespace MS.DbgShell
             m_runspace.SessionStateProxy.PSVariable.Set( DbgProvider.GetHostSupportsColorPSVar() );
 
             // Run the built-in scripts
-         // RunspaceConfigurationEntryCollection< ScriptConfigurationEntry > scripts = null;
-         // if (m_runspaceConfig != null)
-         //     scripts = m_runspaceConfig.InitializationScripts;
+            if( (m_initScripts == null) || (m_initScripts.Count == 0) )
+            {
+                LogManager.Trace("There are no built-in scripts to run");
+            }
+            else
+            {
+                foreach( var s in m_initScripts )
+                {
+                    if( oneShot && (s.Name.StartsWith( c_SkipForOneShotPrefix, StringComparison.OrdinalIgnoreCase )) )
+                    {
+                        LogManager.Trace( "Skipping script because we're in \"one shot\" mode: {0}", s.Name );
+                        continue;
+                    }
+                    LogManager.Trace( "Running script: '{0}'", s.Name );
 
-         // if( (scripts == null) || (scripts.Count == 0) )
-         // {
-         //     LogManager.Trace("There are no built-in scripts to run");
-         // }
-         // else
-         // {
-         //     foreach( ScriptConfigurationEntry s in scripts )
-         //     {
-         //         if( oneShot && (s.Name.StartsWith( c_SkipForOneShotPrefix, StringComparison.OrdinalIgnoreCase )) )
-         //         {
-         //             LogManager.Trace( "Skipping script because we're in \"one shot\" mode: {0}", s.Name );
-         //             continue;
-         //         }
-         //         LogManager.Trace( "Running script: '{0}'", s.Name );
+                    // [danthom] TODO BUGBUG
+                    // spec claims that Ctrl-C is not supposed to stop these.
 
-         //         // [danthom] TODO BUGBUG
-         //         // spec claims that Ctrl-C is not supposed to stop these.
-
-         //         // TODO: I think I shouldn't even need this... top-level handler can handle ctrl-C, not do anything
-         //         //using( new CtrlCInterceptor( ( x ) => { return true; } ) )
-         //         try
-         //         {
-         //             _ExecScriptNoExceptionHandling( shell,
-         //                                             s.Definition,
-         //                                             addToHistory: false );
-         //         }
-         //         catch( RuntimeException rte )
-         //         {
-         //             _ReportException( rte, shell );
-         //             // TODO BUGBUG: the real PowerShell will set the exit code and
-         //             // exit the input loop if init fails. (throwing from here)
-         //         }
-         //     } // end foreach( ScriptConfigurationEntry )
-         // } // end( we have some init scripts )
+                    // TODO: I think I shouldn't even need this... top-level handler can handle ctrl-C, not do anything
+                    //using( new CtrlCInterceptor( ( x ) => { return true; } ) )
+                    try
+                    {
+                        _ExecScriptNoExceptionHandling( shell,
+                                                        s.Definition,
+                                                        addToHistory: false );
+                    }
+                    catch( RuntimeException rte )
+                    {
+                        _ReportException( rte, shell );
+                        // TODO BUGBUG: the real PowerShell will set the exit code and
+                        // exit the input loop if init fails. (throwing from here)
+                    }
+                } // end foreach( ScriptConfigurationEntry )
+            } // end( we have some init scripts )
 
             // If -iss has been specified, then there won't be a runspace
             // configuration to get the shell ID from, so we'll use the default...

@@ -17,6 +17,22 @@ using MS.Dbg;
 
 namespace MS.DbgShell
 {
+    /// <summary>
+    ///    A replacement for the old RunspaceConfiguration's ScriptConfigurationEntry
+    ///    class.
+    /// </summary>
+    struct InitScript
+    {
+        public readonly string Name;
+        public readonly string Definition; // the actual content of the script to execute
+        public InitScript( string name, string definition )
+        {
+            Name = name;
+            Definition = definition;
+        }
+    } // end struct InitScript
+
+
     class MainClass
     {
         private const string c_guestMode = "guestMode";
@@ -699,55 +715,47 @@ namespace MS.DbgShell
             // TODO: investigate differences between CreateDefault and CreateDefault2
             InitialSessionState iss = InitialSessionState.CreateDefault();
 
-            iss.StartupScripts.Add(
-                "Set-ExecutionPolicy -Scope Process Bypass -Force ; Set-StrictMode -Version Latest" );
+            iss.ExecutionPolicy = Microsoft.PowerShell.ExecutionPolicy.Bypass;
 
-            iss.ImportPSModulesFromPath( Path.Combine( dbgModuleDir, "Debugger.psd1" ) );
+            // TODO: maybe add to iss.Formats?
 
-         // RunspaceConfiguration config = RunspaceConfiguration.Create();
-         // // TODO, FILE_A_PS_BUG: Why can't I set the shell ID?
-         // //config.ShellId = "MS.DbgShell";
+            List< InitScript > initScripts = new List< InitScript >();
 
 
-         // config.InitializationScripts.Append(
-         //         new ScriptConfigurationEntry( "BypassExecutionPolicy",
-         //                                       "Set-ExecutionPolicy -Scope Process Bypass -Force ; Set-StrictMode -Version Latest" ) );
+            initScripts.Add( new InitScript( "SetStrictMode",
+                                             "Set-StrictMode -Version Latest" ) );
 
-         // config.InitializationScripts.Append(
-         //         new ScriptConfigurationEntry( "ImportOurModule",
-         //                                       Util.Sprintf( @"Import-Module ""{0}""",
-         //                                                     Path.Combine( dbgModuleDir, "Debugger.psd1" ) ) ) );
+            initScripts.Add( new InitScript( "ImportOurModule",
+                                             Util.Sprintf( @"Import-Module ""{0}""",
+                                                           Path.Combine( dbgModuleDir, "Debugger.psd1" ) ) ) );
 
-         // config.InitializationScripts.Append(
-         //         new ScriptConfigurationEntry( "CreateBinDrive",
-         //                                       String.Format( CultureInfo.InvariantCulture,
-         //                                                      @"[void] (New-PSDrive Bin FileSystem ""{0}"")",
-         //                                                      rootDir ) ) );
+            initScripts.Add( new InitScript( "CreateBinDrive",
+                                             String.Format( CultureInfo.InvariantCulture,
+                                                            @"[void] (New-PSDrive Bin FileSystem ""{0}"")",
+                                                            rootDir ) ) );
 
-         // config.InitializationScripts.Append(
-         //         new ScriptConfigurationEntry( "SetStartLocation", "Set-Location Dbg:\\" ) );
+            initScripts.Add( new InitScript( "SetStartLocation", "Set-Location Dbg:\\" ) );
 
-         // if( DbgProvider.IsInGuestMode )
-         // {
-         //     // In guest mode, we are already attached to something, so we need to
-         //     // build the namespace based on the existing dbgeng state.
-         //     config.InitializationScripts.Append(
-         //             new ScriptConfigurationEntry( "RebuildNs", "[MS.Dbg.DbgProvider]::ForceRebuildNamespace()" ) );
-         // }
+            if( DbgProvider.IsInGuestMode )
+            {
+                // In guest mode, we are already attached to something, so we need to
+                // build the namespace based on the existing dbgeng state.
+                initScripts.Add( new InitScript( "RebuildNs",
+                                                 "[MS.Dbg.DbgProvider]::ForceRebuildNamespace()" ) );
+            }
 
             // I cannot explain why, but using Update-FormatData (which is [a proxy
             // function] defined in our module instead of Invoke-Script (a C# cmdlet
             // defined in our module) subtly changes something having to do with scope or
             // something, such that the $AltListIndent variable wasn't working... until
             // all the format data was reloaded via Update-FormatData.
-         // var fmtScripts = _GetFmtScripts( dbgModuleDir );
-         // config.InitializationScripts.Append(
-         //         new ScriptConfigurationEntry( "LoadFmtDefinitions",
-         //                                       String.Format( CultureInfo.InvariantCulture,
-         //                                                      @"[void] (Update-FormatData ""{0}"")",
-         //                                                      String.Join( "\", \"", fmtScripts ) ) ) );
+            var fmtScripts = _GetFmtScripts( dbgModuleDir );
+            initScripts.Add(
+                    new InitScript( "LoadFmtDefinitions",
+                                    String.Format( CultureInfo.InvariantCulture,
+                                                   @"[void] (Update-FormatData ""{0}"")",
+                                                   String.Join( "\", \"", fmtScripts ) ) ) );
 
-            /*
             // And in fact it seems that the trick to not losing our "captured contexts"
             // is that Update-AltFormatData needs to always be run in the context of the
             // Debugger.Formatting module.
@@ -779,20 +787,19 @@ namespace MS.DbgShell
 .ForwardHelpCategory Cmdlet
 #>
 }";
-            config.InitializationScripts.Append(
-                    new ScriptConfigurationEntry( "MonkeyPatchUpdateAltFormatData",
-                                                  monkeyPatched ) );
+            initScripts.Add( new InitScript( "MonkeyPatchUpdateAltFormatData",
+                                             monkeyPatched ) );
 
 
             string typesPs1Xml = Path.Combine( dbgModuleDir, "Types.ps1xml" );
 
             if( File.Exists( typesPs1Xml ) ) // TODO: Remove once types.ps1xml is picked in
             {
-                config.InitializationScripts.Append(
-                        new ScriptConfigurationEntry( "LoadTypeAdapterStuff",
-                                                      String.Format( CultureInfo.InvariantCulture,
-                                                                     @"[void] (Update-TypeData ""{0}"")",
-                                                                     c_FileSystem_PowerShellProviderPrefix + typesPs1Xml ) ) );
+                initScripts.Add(
+                        new InitScript( "LoadTypeAdapterStuff",
+                                        String.Format( CultureInfo.InvariantCulture,
+                                                       @"[void] (Update-TypeData ""{0}"")",
+                                                       c_FileSystem_PowerShellProviderPrefix + typesPs1Xml ) ) );
             }
 
             var converterScripts = Directory.GetFiles( dbgModuleDir, "Debugger.Converters.*.ps1" );
@@ -805,9 +812,8 @@ namespace MS.DbgShell
             string argCompleterScript = Path.Combine( dbgModuleDir, "Debugger.ArgumentCompleters.ps1" );
             loadConvertersCmd.Append( Util.Sprintf( "; [void] (& '{0}{1}')", c_FileSystem_PowerShellProviderPrefix, argCompleterScript) );
 
-            config.InitializationScripts.Append(
-                    new ScriptConfigurationEntry( "LoadConverters", loadConvertersCmd.ToString() ) );
-            */
+            initScripts.Add( new InitScript( "LoadConverters",
+                                             loadConvertersCmd.ToString() ) );
 
             // TODO: wrap
             var colorBanner = new ColorString( ConsoleColor.Cyan, "Microsoft Debugger DbgShell\n" )
@@ -832,6 +838,7 @@ namespace MS.DbgShell
             string banner = colorBanner.ToString( true );
 
             int rc = ColorConsoleHost.Start( iss,
+                                             initScripts,
                                              banner,
                                              String.Empty,
                                              args );
