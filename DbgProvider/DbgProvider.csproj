@@ -35,11 +35,51 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.0.0-rc.1" />
     <PackageReference Include="Unofficial.Microsoft.DebuggerBinaries" Version="10.0.17763.132" />
+    <PackageReference Include="Unofficial.Microsoft.TextTemplating.BuildTasks" Version="16.0.0.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ClrMemDiag\ClrMemDiag.csproj" />
     <ProjectReference Include="..\DbgEngWrapper\DbgEngWrapper.vcxproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <T4Transform Include="Debugger.Format.Color.tt">
+      <OutputFilePath>$(OutputPath)</OutputFilePath>
+      <!-- Where the generated file should go -->
+    </T4Transform>
+    <T4Transform Include="Debugger.Format.tt">
+      <OutputFilePath>$(OutputPath)</OutputFilePath>
+      <!-- Where the generated file should go -->
+    </T4Transform>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      This is how we can pass parameters to the T4 engine, so that 'parameter' directives will work. Ex:
+
+        <#@ parameter type="System.String" name="PlatformName" #>
+    -->
+    <T4ParameterValues Include="SolutionDir">
+      <Value>$(SolutionDir)</Value>
+      <Visible>false</Visible>
+      <!-- so that it won't show up in the Solution Explorer -->
+    </T4ParameterValues>
+    <T4ParameterValues Include="Configuration">
+      <Value>$(Configuration)</Value>
+      <Visible>false</Visible>
+    </T4ParameterValues>
+    <T4ParameterValues Include="PlatformName">
+      <Value>$(PlatformName)</Value>
+      <Visible>false</Visible>
+    </T4ParameterValues>
+  </ItemGroup>
+  <PropertyGroup>
+    <TransformOnBuild>true</TransformOnBuild>
+    <!-- Other properties can be inserted here -->
+  </PropertyGroup>
 
 
   <ItemGroup>
@@ -92,6 +132,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Debugger.Format.ps1xml.in">
+    </None>
+    <None Update="FmtUtils.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="GetPsContextFunc.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
