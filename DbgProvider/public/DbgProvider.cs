@@ -2128,6 +2128,13 @@ namespace MS.Dbg
                         result += 0xf;
                         break;
 
+                    case (char) 27: // `e is an ESC character
+                        if( isDecimal )
+                            return false;
+
+                        result += 0xe;
+                        break;
+
                     default:
                         byte b;
                         if( !Util.TryCharToByte( c, out b, !isDecimal ) )
