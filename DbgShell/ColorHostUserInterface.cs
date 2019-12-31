@@ -29,6 +29,10 @@ namespace MS.DbgShell
     [SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")] // lol
     internal partial class ColorHostUserInterface : System.Management.Automation.Host.PSHostUserInterface
     {
+        /// <summary>
+        /// Command completion implementation object.
+        /// </summary>
+        private PowerShell _commandCompletionPowerShell;
 
         /// <summary>
         /// Return true if the console supports a VT100 like virtual terminal
@@ -36,9 +40,7 @@ namespace MS.DbgShell
         public override bool SupportsVirtualTerminal { get; }
 
         /// <summary>
-        /// 
-        /// Constructs an instance 
-        /// 
+        /// Constructs an instance.
         /// </summary>
         /// <param name="parent"></param>
         /// <exception/>
@@ -47,8 +49,8 @@ namespace MS.DbgShell
         {
             Util.Assert(parent != null, "parent may not be null");
 
-            this.parent = parent;
-            this.rawui = new ColorHostRawUserInterface(this);
+            _parent = parent;
+            _rawui = new ColorHostRawUserInterface(this);
 
             debugFormatString = "DEBUG: {0}"; // ConsoleHostUserInterfaceStrings.DebugFormatString;
             verboseFormatString = "VERBOSE: {0}"; // ConsoleHostUserInterfaceStrings.VerboseFormatString;
@@ -75,25 +77,9 @@ namespace MS.DbgShell
         }
 
 
-
         const string CustomReadlineCommand = "PSConsoleHostReadLine";
         private bool m_customReadlineFuncExists;
 
-
-        private bool readFromStdin;
-        private bool noPrompt;
-
-        private bool throwOnReadAndPrompt;
-
-        // This instance data is "read-only" and need not have access serialized.
-
-        private ColorHostRawUserInterface rawui;
-        private ColorConsoleHost parent;
-
-        /// <summary>
-        /// Command completion implementation object
-        /// </summary>
-        private PowerShell commandCompletionPowerShell;
 
         /// <summary>
         /// 
@@ -107,11 +93,11 @@ namespace MS.DbgShell
         {
             get
             {
-                Util.Assert(this.rawui != null, "rawui should have been created by ctor");
+                Util.Assert(_rawui != null, "rawui should have been created by ctor");
 
                 // no locking because this is read-only, and allocated in the ctor.
 
-                return rawui;
+                return _rawui;
             }
         }
 
@@ -124,8 +110,8 @@ namespace MS.DbgShell
         {
             get
             {
-                return this.commandCompletionPowerShell != null &&
-                       this.commandCompletionPowerShell.InvocationStateInfo.State == PSInvocationState.Running;
+                return _commandCompletionPowerShell != null &&
+                       _commandCompletionPowerShell.InvocationStateInfo.State == PSInvocationState.Running;
             }
         }
 
@@ -278,9 +264,9 @@ namespace MS.DbgShell
                 {
                     isModeChanged = false;
                 }
-                rawui.ClearKeyCache();
+                _rawui.ClearKeyCache();
 
-                Coordinates originalCursorPos = rawui.CursorPosition;
+                Coordinates originalCursorPos = _rawui.CursorPosition;
 
                 do
                 {
@@ -384,8 +370,8 @@ namespace MS.DbgShell
                 "Calling WritePrintToken with printToken being null or empty");
             Util.Assert(printToken.Length == 1,
                 "Calling WritePrintToken with printToken's Length being " + printToken.Length);
-            Size consoleBufferSize = rawui.BufferSize;
-            Coordinates currentCursorPosition = rawui.CursorPosition;
+            Size consoleBufferSize = _rawui.BufferSize;
+            Coordinates currentCursorPosition = _rawui.CursorPosition;
 
             // if the cursor is currently at the lower right corner, this write will cause the screen buffer to
             // scroll up. So, it is necessary to adjust the original cursor position one row up.
@@ -415,7 +401,7 @@ namespace MS.DbgShell
 
         private void WriteBackSpace(Coordinates originalCursorPosition)
         {
-            Coordinates cursorPosition = rawui.CursorPosition;
+            Coordinates cursorPosition = _rawui.CursorPosition;
             if (cursorPosition == originalCursorPosition)
             {
                 // at originalCursorPosition, don't move
@@ -429,7 +415,7 @@ namespace MS.DbgShell
                     return;
                 }
                 // BufferSize.Width is 1 larger than cursor position
-                cursorPosition.X = rawui.BufferSize.Width - 1;
+                cursorPosition.X = _rawui.BufferSize.Width - 1;
                 cursorPosition.Y--;
                 BlankAtCursor(cursorPosition);
             }
@@ -442,14 +428,14 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// Blank out at and move rawui.CursorPosition to <paramref name="cursorPosition"/>
+        /// Blank out at and move _rawui.CursorPosition to <paramref name="cursorPosition"/>
         /// </summary>
         /// <param name="cursorPosition">Position to blank out.</param>
         private void BlankAtCursor(Coordinates cursorPosition)
         {
-            rawui.CursorPosition = cursorPosition;
+            _rawui.CursorPosition = cursorPosition;
             WriteToConsole(" ", true);
-            rawui.CursorPosition = cursorPosition;
+            _rawui.CursorPosition = cursorPosition;
         }
 
 
@@ -582,15 +568,15 @@ namespace MS.DbgShell
             }
 
             TextWriter writer =
-                  (!parent.IsStandardOutputRedirected || parent.IsInteractive)
-                ? parent.ConsoleTextWriter
-                : parent.StandardOutputWriter;
+                  (!_parent.IsStandardOutputRedirected || _parent.IsInteractive)
+                ? _parent.ConsoleTextWriter
+                : _parent.StandardOutputWriter;
 
-         // if (parent.IsRunningAsync) [danthom]
+         // if (_parent.IsRunningAsync) [danthom]
          // {
-         //     Util.Assert(writer == parent.OutputSerializer.textWriter, "writers should be the same");
+         //     Util.Assert(writer == _parent.OutputSerializer.textWriter, "writers should be the same");
 
-         //     parent.OutputSerializer.Serialize(value);
+         //     _parent.OutputSerializer.Serialize(value);
          // }
          // else
             {
@@ -1172,14 +1158,14 @@ namespace MS.DbgShell
             }
 
             TextWriter writer =
-                  (!parent.IsStandardErrorRedirected || parent.IsInteractive)
-                ? parent.ConsoleTextWriter
-                : parent.StandardErrorWriter;
+                  (!_parent.IsStandardErrorRedirected || _parent.IsInteractive)
+                ? _parent.ConsoleTextWriter
+                : _parent.StandardErrorWriter;
 
-            if (writer == parent.ConsoleTextWriter)
+            if (writer == _parent.ConsoleTextWriter)
                 WriteLine(ErrorForegroundColor, ErrorBackgroundColor, value);
             else
-                parent.StandardErrorWriter.Write(value + Crlf);
+                _parent.StandardErrorWriter.Write(value + Crlf);
         }
 
         // Format colors
@@ -1268,13 +1254,13 @@ namespace MS.DbgShell
             result = ReadLineResult.endedOnEnter;
 
             string s = "";
-            if (parent.IsStandardInputRedirected && readFromStdin)
+            if (_parent.IsStandardInputRedirected && ReadFromStdin)
             {
                 // When reading from a file handle instead of a console, endOnTab and initial content are ignored.
 
                 // StreamReader.ReadLine simply returns null when EOF is reached.
 
-                s = parent.StandardInReader.ReadLine();
+                s = _parent.StandardInReader.ReadLine();
                 if (endOnTab && !string.IsNullOrEmpty(s) && s.IndexOf(Tab, StringComparison.OrdinalIgnoreCase) != -1)
                 {
                     result = ReadLineResult.endedOnTab;
@@ -1318,7 +1304,7 @@ namespace MS.DbgShell
             uint keyState = 0;
             string restOfLine = null;
 
-            rawui.ClearKeyCache();
+            _rawui.ClearKeyCache();
 
             do
             {
@@ -1534,18 +1520,14 @@ namespace MS.DbgShell
                     int leftover = input.Length - tabIndex - 1;
                     if (leftover > 0)
                     {
-                        // Check if the std input is redirected, e.g. reading from a file
-                        bool isStdInputRedirected = parent.IsStandardInputRedirected && readFromStdin;
-                        if (!isStdInputRedirected)
-                        {
-                            // We are reading from the console
-                            // If the cursor is at the end of a line, there is actually a space character at the cursor's position and when we type tab
-                            // at the end of a line, that space character is replaced by the tab. But when we type tab at the middle of a line, the space
-                            // character at the end is preserved, we should remove that space character because it's not provided by the user.
-                            input = input.Remove(input.Length - 1);
-                        }
+                        // We are reading from the console (not redirected, b/c we don't end on tab when redirected)
+                        // If the cursor is at the end of a line, there is actually a space character at the cursor's position and when we type tab
+                        // at the end of a line, that space character is replaced by the tab. But when we type tab at the middle of a line, the space
+                        // character at the end is preserved, we should remove that space character because it's not provided by the user.
+                        input = input.Remove(input.Length - 1);
                         restOfLine = input.Substring(tabIndex + 1);
                     }
+
                     input = input.Remove(tabIndex);
 
                     if (input != lastCompletion || commandCompletion == null)
@@ -1675,7 +1657,7 @@ namespace MS.DbgShell
         {
             try
             {
-                var runspace = this.parent.Runspace;
+                var runspace = _parent.Runspace;
                 // [danthom]
                 // *sigh* It's bad enough that nested shells have to always be treated specially,
                 // but we have to find our own way to do it--the stock host relies on PS internals.
@@ -1683,19 +1665,19 @@ namespace MS.DbgShell
              //     runspace.ExecutionContext.EngineHostInterface.NestedPromptCount > 0)
                 if( runspace.RunspaceAvailability == RunspaceAvailability.AvailableForNestedCommand )
                 {
-                    commandCompletionPowerShell = PowerShell.Create(RunspaceMode.CurrentRunspace);
+                    _commandCompletionPowerShell = PowerShell.Create(RunspaceMode.CurrentRunspace);
                 }
                 else
                 {
-                    commandCompletionPowerShell = PowerShell.Create();
-                    commandCompletionPowerShell.Runspace = runspace;
+                    _commandCompletionPowerShell = PowerShell.Create();
+                    _commandCompletionPowerShell.Runspace = runspace;
                 }
 
-                return CommandCompletion.CompleteInput(input, input.Length, null, commandCompletionPowerShell);
+                return CommandCompletion.CompleteInput(input, input.Length, null, _commandCompletionPowerShell);
             }
             finally
             {
-                commandCompletionPowerShell = null;
+                _commandCompletionPowerShell = null;
             }
         }
 
@@ -1730,6 +1712,10 @@ namespace MS.DbgShell
         private static string verboseFormatString;
         private static string warningFormatString;
 
+        // This instance data is "read-only" and need not have access serialized.
+
+        private ColorHostRawUserInterface _rawui;
+        private ColorConsoleHost _parent;
 
         // Resource Base Name for this class
 

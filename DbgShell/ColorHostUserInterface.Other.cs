@@ -67,7 +67,7 @@ namespace MS.DbgShell
             PowerShell ps = null;
             try
             {
-                var runspace = this.parent.Runspace;
+                var runspace = _parent.Runspace;
                 if( null == runspace )
                     return false;
 
