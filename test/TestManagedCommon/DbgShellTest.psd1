@@ -41,7 +41,6 @@ CLRVersion = '4.0'
 ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-#RequiredModules = @( "filesystem::$PSScriptRoot\Pester\Pester.psd1" )
 RequiredModules = @( "Pester" )
 
 # Assemblies that must be loaded prior to importing this module

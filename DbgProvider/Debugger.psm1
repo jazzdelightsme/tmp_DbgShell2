@@ -4736,9 +4736,6 @@ function testall()
     # A: In case we are run from a UNC path (PS does not like having a UNC path in the
     #    PSModulePath).
     #
-    # That's also why we pre-load Pester, because the prereq specified in
-    # DbgShellTest.psd1 might not work if we leave it to PS to fulfill it.
-    Import-Module -Global "filesystem::$PSScriptRoot\..\DbgShellTest\Pester\Pester.psd1"
     Import-Module -Global "filesystem::$PSScriptRoot\..\DbgShellTest\DbgShellTest.psd1"
     Invoke-Pester Tests:\*.ps1 @args
 }
