@@ -417,13 +417,13 @@ namespace MS.Dbg.Commands
         } // end Transform()
 
 
-        private static FieldInfo s_tokenTextField =
-            typeof( PSObject ).GetField( "TokenText",
-                                         BindingFlags.Instance | BindingFlags.NonPublic );
+        private static PropertyInfo s_tokenTextProp =
+            typeof( PSObject ).GetProperty( "TokenText",
+                                            BindingFlags.Instance | BindingFlags.NonPublic );
 
         private static string _GetAsTyped_usingIckyPrivateReflection( PSObject pso )
         {
-            return (string) s_tokenTextField.GetValue( pso );
+            return (string) s_tokenTextProp.GetValue( pso );
         } // end _GetAsTyped_usingIckyPrivateReflection()
 
 
