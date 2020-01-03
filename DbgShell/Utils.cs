@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Reflection;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Management.Automation;
 using System.Management.Automation.Host;
 using Microsoft.Win32;
@@ -163,7 +163,7 @@ namespace MS.DbgShell
         }
 
 
-        // Taken from StringUtils:
+        // Taken from StringUtil:
         internal static string TruncateToBufferCellWidth(
             PSHostRawUserInterface rawUI,
             string toTruncate,
@@ -193,6 +193,26 @@ namespace MS.DbgShell
                     --i;
                 }
             } while (true);
+
+            return result;
+        }
+
+        // Taken from StringUtil:
+        // Typical padding is at most a screen's width, any more than that and we won't bother caching.
+        private const int IndentCacheMax = 120;
+        private static readonly string[] IndentCache = new string[IndentCacheMax];
+        public static string Padding(int countOfSpaces)
+        {
+            if (countOfSpaces >= IndentCacheMax)
+                return new string(' ', countOfSpaces);
+
+            var result = IndentCache[countOfSpaces];
+
+            if (result == null)
+            {
+                Interlocked.CompareExchange(ref IndentCache[countOfSpaces], new string(' ', countOfSpaces), null);
+                result = IndentCache[countOfSpaces];
+            }
 
             return result;
         }

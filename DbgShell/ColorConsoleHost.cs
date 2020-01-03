@@ -1489,6 +1489,8 @@ namespace MS.DbgShell
         } // end EscapeSingleQuotes()
 
 
+        internal Lazy<TextReader> ConsoleIn { get; } = new Lazy<TextReader>(() => Console.In);
+
         // TODO TODO TODO
         // TODO TODO TODO Properties required by the UI layers below us, need to actually implement logic for them.
         // TODO TODO TODO

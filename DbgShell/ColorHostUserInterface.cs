@@ -1,6 +1,5 @@
-﻿/********************************************************************++
-Copyright (c) Microsoft Corporation.  All rights reserved.
---********************************************************************/
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 using System;
 using System.IO;
@@ -12,6 +11,7 @@ using System.Text;
 using System.Management.Automation;
 using System.Management.Automation.Internal;
 using System.Management.Automation.Host;
+using System.Runtime.CompilerServices;
 using System.Security;
 using ConsoleHandle = Microsoft.Win32.SafeHandles.SafeFileHandle;
 
@@ -232,7 +232,7 @@ namespace MS.DbgShell
                 null;
             SecureString secureResult = new SecureString();
             StringBuilder result = new StringBuilder();
-            ConsoleHandle handle = ConsoleControl.GetInputHandle();
+            ConsoleHandle handle = ConsoleControl.GetConioDeviceHandle();
             ConsoleControl.ConsoleModes originalMode = ConsoleControl.GetMode(handle);
             bool isModeChanged = true; // assume ConsoleMode is changed so that if ReadLineSetMode
             // fails to return the value correctly, the original mode is
@@ -264,6 +264,7 @@ namespace MS.DbgShell
                 {
                     isModeChanged = false;
                 }
+
                 _rawui.ClearKeyCache();
 
                 Coordinates originalCursorPos = _rawui.CursorPosition;
@@ -275,8 +276,9 @@ namespace MS.DbgShell
                     // end up having a immutable string holding the
                     // secret in memory.
                     //
-                    uint unused = 0;
-                    string key = ConsoleControl.ReadConsole(handle, string.Empty, 1, false, out unused);
+                    const int CharactersToRead = 1;
+                    Span<char> inputBuffer = stackalloc char[CharactersToRead + 1];
+                    string key = ConsoleControl.ReadConsole(handle, initialContentLength: 0, inputBuffer, charactersToRead: CharactersToRead, endOnTab: false, out _);
 
                     if (string.IsNullOrEmpty(key) || (char)3 == key[0])
                     {
@@ -319,6 +321,7 @@ namespace MS.DbgShell
                         {
                             result.Append(key);
                         }
+
                         if (!string.IsNullOrEmpty(printTokenString))
                         {
                             WritePrintToken(printTokenString, ref originalCursorPos);
@@ -468,7 +471,20 @@ namespace MS.DbgShell
 
         #region WriteToConsole
 
-        internal void WriteToConsole(string value, bool transcribeResult)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void WriteToConsole(char c, bool transcribeResult)
+        {
+            ReadOnlySpan<char> value = stackalloc char[1] { c };
+            WriteToConsole(value, transcribeResult);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void WriteToConsole(ReadOnlySpan<char> value, bool transcribeResult)
+        {
+            WriteToConsole(value, transcribeResult, newLine: false);
+        }
+
+        private void WriteToConsole(ReadOnlySpan<char> value, bool transcribeResult, bool newLine)
         {
             ConsoleHandle handle = ConsoleControl.GetActiveScreenBufferHandle();
 
@@ -489,12 +505,16 @@ namespace MS.DbgShell
             PreWrite();
 
             // This is atomic, so we don't lock here...
+            ConsoleControl.WriteConsole(handle, value, newLine);
 
-            ConsoleControl.WriteConsole(handle, value);
+         // if (_isInteractiveTestToolListening && Console.IsOutputRedirected)
+         // {
+         //     ConsoleOutWriteHelper(value, newLine);
+         // }
 
             if (transcribeResult)
             {
-                PostWrite(value);
+                PostWrite(value, newLine);
             }
             else
             {
@@ -502,115 +522,7 @@ namespace MS.DbgShell
             }
         }
 
-
-
-        private void WriteToConsole(ConsoleColor foregroundColor, ConsoleColor backgroundColor, string text)
-        {
-            ConsoleColor fg = RawUI.ForegroundColor;
-            ConsoleColor bg = RawUI.BackgroundColor;
-
-            RawUI.ForegroundColor = foregroundColor;
-            RawUI.BackgroundColor = backgroundColor;
-
-            try
-            {
-                WriteToConsole(text, true);
-            }
-            finally
-            {
-                RawUI.ForegroundColor = fg;
-                RawUI.BackgroundColor = bg;
-            }
-        }
-
-        private void WriteLineToConsole(string text)
-        {
-            WriteToConsole(text, true);
-            WriteToConsole(Crlf, true);
-        }
-
-
-
-        private void WriteLineToConsole()
-        {
-            WriteToConsole(Crlf, true);
-        }
-
-        #endregion WriteToConsole
-
-
-
-        /// <summary>
-        /// 
-        /// See base class.
-        /// 
-        /// </summary>
-        /// <param name="value"></param>
-        /// <exception cref="HostException">
-        /// 
-        /// If Win32's CreateFile fails
-        ///    OR
-        ///    Win32's GetConsoleMode fails
-        ///    OR
-        ///    Win32's SetConsoleMode fails
-        ///    OR
-        ///    Win32's WriteConsole fails
-        /// 
-        /// </exception>
-
-        public override void Write(string value)
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                // do nothing
-
-                return;
-            }
-
-            TextWriter writer =
-                  (!_parent.IsStandardOutputRedirected || _parent.IsInteractive)
-                ? _parent.ConsoleTextWriter
-                : _parent.StandardOutputWriter;
-
-         // if (_parent.IsRunningAsync) [danthom]
-         // {
-         //     Util.Assert(writer == _parent.OutputSerializer.textWriter, "writers should be the same");
-
-         //     _parent.OutputSerializer.Serialize(value);
-         // }
-         // else
-            {
-                writer.Write(value);
-            }
-        }
-
-
-
-        /// <summary>
-        /// 
-        /// See base class
-        /// 
-        /// </summary>
-        /// <param name="foregroundColor"></param>
-        /// <param name="backgroundColor"></param>
-        /// <param name="value"></param>
-        /// <exception cref="HostException">
-        /// 
-        /// If obtaining information about the buffer failed
-        ///    OR
-        ///    Win32's SetConsoleTextAttribute
-        ///    OR
-        ///    Win32's CreateFile fails
-        ///    OR
-        ///    Win32's GetConsoleMode fails
-        ///    OR
-        ///    Win32's SetConsoleMode fails
-        ///    OR
-        ///    Win32's WriteConsole fails
-        /// 
-        /// </exception>
-
-        public override void Write(ConsoleColor foregroundColor, ConsoleColor backgroundColor, string value)
+        private void WriteToConsole(ConsoleColor foregroundColor, ConsoleColor backgroundColor, string text, bool newLine = false)
         {
             // Sync access so that we don't race on color settings if called from multiple threads.
             lock (_instanceLock)
@@ -623,7 +535,7 @@ namespace MS.DbgShell
 
                 try
                 {
-                    this.Write(value);
+                    WriteToConsole(text, transcribeResult: true, newLine);
                 }
                 finally
                 {
@@ -633,16 +545,121 @@ namespace MS.DbgShell
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ConsoleOutWriteHelper(ReadOnlySpan<char> value, bool newLine)
+        {
+            if (newLine)
+            {
+                Console.Out.WriteLine(value);
+            }
+            else
+            {
+                Console.Out.Write(value);
+            }
+        }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void WriteLineToConsole(ReadOnlySpan<char> value, bool transcribeResult)
+        {
+            WriteToConsole(value, transcribeResult, newLine: true);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void WriteLineToConsole(ConsoleColor foregroundColor, ConsoleColor backgroundColor, string text)
+        {
+            WriteToConsole(foregroundColor, backgroundColor, text, newLine: true);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void WriteLineToConsole(string text)
+        {
+            WriteLineToConsole(text, transcribeResult: true);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void WriteLineToConsole()
+        {
+            WriteToConsole(Environment.NewLine, transcribeResult: true, newLine: false);
+        }
+
+        #endregion WriteToConsole
 
         /// <summary>
-        /// 
-        /// See base class
-        /// 
+        /// See base class.
         /// </summary>
         /// <param name="value"></param>
         /// <exception cref="HostException">
-        /// 
+        /// If Win32's CreateFile fails
+        ///    OR
+        ///    Win32's GetConsoleMode fails
+        ///    OR
+        ///    Win32's SetConsoleMode fails
+        ///    OR
+        ///    Win32's WriteConsole fails
+        /// </exception>
+
+        public override void Write(string value)
+        {
+            WriteImpl(value, newLine: false);
+        }
+
+        private void WriteImpl(string value, bool newLine)
+        {
+            if (string.IsNullOrEmpty(value) && !newLine)
+            {
+                return;
+            }
+
+         // // If the test hook is set, write to it and continue.
+         // if (s_h != null)
+         // {
+         //     if (newLine)
+         //     {
+         //         s_h.WriteLine(value);
+         //     }
+         //     else
+         //     {
+         //         s_h.Write(value);
+         //     }
+         // }
+
+            TextWriter writer = Console.IsOutputRedirected ? Console.Out : _parent.ConsoleTextWriter;
+
+         // if (_parent.IsRunningAsync)
+         // {
+         //     Dbg.Assert(writer == _parent.OutputSerializer.textWriter, "writers should be the same");
+
+         //     _parent.OutputSerializer.Serialize(value);
+
+         //     if (newLine)
+         //     {
+         //         _parent.OutputSerializer.Serialize(Environment.NewLine);
+         //     }
+         // }
+         // else
+            {
+                if (newLine)
+                {
+                    writer.WriteLine(value);
+                }
+                else
+                {
+                    writer.Write(value);
+                }
+            }
+        }
+
+        /// <summary>
+        /// See base class.
+        /// </summary>
+        /// <param name="foregroundColor"></param>
+        /// <param name="backgroundColor"></param>
+        /// <param name="value"></param>
+        /// <exception cref="HostException">
+        /// If obtaining information about the buffer failed
+        ///    OR
+        ///    Win32's SetConsoleTextAttribute
+        ///    OR
         ///    Win32's CreateFile fails
         ///    OR
         ///    Win32's GetConsoleMode fails
@@ -650,18 +667,93 @@ namespace MS.DbgShell
         ///    Win32's SetConsoleMode fails
         ///    OR
         ///    Win32's WriteConsole fails
-        /// 
         /// </exception>
 
-        public override void WriteLine(string value)
+        public override void Write(ConsoleColor foregroundColor, ConsoleColor backgroundColor, string value)
         {
-            // lock here so that the newline is written atomically with the value
+            Write(foregroundColor, backgroundColor, value, newLine: false);
+        }
 
+        /// <summary>
+        /// See base class.
+        /// </summary>
+        /// <param name="foregroundColor"></param>
+        /// <param name="backgroundColor"></param>
+        /// <param name="value"></param>
+        /// <exception cref="HostException">
+        /// If obtaining information about the buffer failed
+        ///    OR
+        ///    Win32's SetConsoleTextAttribute
+        ///    OR
+        ///    Win32's CreateFile fails
+        ///    OR
+        ///    Win32's GetConsoleMode fails
+        ///    OR
+        ///    Win32's SetConsoleMode fails
+        ///    OR
+        ///    Win32's WriteConsole fails
+        /// </exception>
+        public override void WriteLine(ConsoleColor foregroundColor, ConsoleColor backgroundColor, string value)
+        {
+            Write(foregroundColor, backgroundColor, value, newLine: true);
+        }
+
+        private void Write(ConsoleColor foregroundColor, ConsoleColor backgroundColor, string value, bool newLine)
+        {
+            // Sync access so that we don't race on color settings if called from multiple threads.
             lock (_instanceLock)
             {
-                this.Write(value);
-                this.Write(Crlf);
+                ConsoleColor fg = RawUI.ForegroundColor;
+                ConsoleColor bg = RawUI.BackgroundColor;
+
+                RawUI.ForegroundColor = foregroundColor;
+                RawUI.BackgroundColor = backgroundColor;
+
+                try
+                {
+                    this.WriteImpl(value, newLine);
+                }
+                finally
+                {
+                    RawUI.ForegroundColor = fg;
+                    RawUI.BackgroundColor = bg;
+                }
             }
+        }
+
+        /// <summary>
+        /// See base class.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <exception cref="HostException">
+        ///    Win32's CreateFile fails
+        ///    OR
+        ///    Win32's GetConsoleMode fails
+        ///    OR
+        ///    Win32's SetConsoleMode fails
+        ///    OR
+        ///    Win32's WriteConsole fails
+        /// </exception>
+        public override void WriteLine(string value)
+        {
+            this.WriteImpl(value, newLine: true);
+        }
+
+        /// <summary>
+        /// See base class.
+        /// </summary>
+        /// <exception cref="HostException">
+        ///    Win32's CreateFile fails
+        ///    OR
+        ///    Win32's GetConsoleMode fails
+        ///    OR
+        ///    Win32's SetConsoleMode fails
+        ///    OR
+        ///    Win32's WriteConsole fails
+        /// </exception>
+        public override void WriteLine()
+        {
+            this.WriteImpl(Environment.NewLine, newLine: false);
         }
 
         #region Word Wrapping
@@ -1211,7 +1303,7 @@ namespace MS.DbgShell
             endedOnBreak = 3
         }
 
-        private const int maxInputLineLength = 8192;
+        private const int MaxInputLineLength = 1024;
 
         /// <summary>
         /// Reads a line of input from the console.  Returns when the user hits enter, a break key, a break event occurs.  In
@@ -1253,63 +1345,133 @@ namespace MS.DbgShell
         {
             result = ReadLineResult.endedOnEnter;
 
-            string s = "";
-            if (_parent.IsStandardInputRedirected && ReadFromStdin)
+            // If the test hook is set, read from it.
+            //if (s_h != null) return s_h.ReadLine();
+
+            string restOfLine = null;
+
+            string s = ReadFromStdin
+                ? ReadLineFromFile(initialContent)
+                : ReadLineFromConsole(endOnTab, initialContent, calledFromPipeline, ref restOfLine, ref result);
+
+            if (transcribeResult)
             {
-                // When reading from a file handle instead of a console, endOnTab and initial content are ignored.
-
-                // StreamReader.ReadLine simply returns null when EOF is reached.
-
-                s = _parent.StandardInReader.ReadLine();
-                if (endOnTab && !string.IsNullOrEmpty(s) && s.IndexOf(Tab, StringComparison.OrdinalIgnoreCase) != -1)
-                {
-                    result = ReadLineResult.endedOnTab;
-                    return s;
-                }
-                return s;
+                PostRead(s);
+            }
+            else
+            {
+                PostRead();
             }
 
-            ConsoleHandle handle = ConsoleControl.GetInputHandle();
+            if (restOfLine != null)
+                s += restOfLine;
+
+            return s;
+        }
+
+        private string ReadLineFromFile(string initialContent)
+        {
+            var sb = new StringBuilder();
+            if (!string.IsNullOrEmpty(initialContent))
+            {
+                sb.Append(initialContent);
+                sb.Append('\n');
+            }
+
+            var consoleIn = _parent.ConsoleIn.Value;
+            while (true)
+            {
+                var inC = consoleIn.Read();
+                if (inC == -1)
+                {
+                    // EOF - we return null which tells our caller to exit
+                    // but only if we don't have any input, we could have
+                    // input and then stdin was closed, but never saw a newline.
+                    return sb.Length == 0 ? null : sb.ToString();
+                }
+
+                var c = unchecked((char)inC);
+                if (!NoPrompt) Console.Out.Write(c);
+
+                if (c == '\r')
+                {
+                    // Treat as newline, but consume \n if there is one.
+                    if (consoleIn.Peek() == '\n')
+                    {
+                        if (!NoPrompt) Console.Out.Write('\n');
+                        consoleIn.Read();
+                    }
+
+                    break;
+                }
+
+                if (c == '\n')
+                {
+                    break;
+                }
+
+                // If NoPrompt is true, we are in a sort of server mode where we shouldn't
+                // do anything like edit the command line - every character is part of the input.
+                if (c == '\b' && !NoPrompt)
+                {
+                    sb.Remove(sb.Length - 1, 1);
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        private string ReadLineFromConsole(bool endOnTab, string initialContent, bool calledFromPipeline, ref string restOfLine, ref ReadLineResult result)
+        {
             PreRead();
             // Ensure that we're in the proper line-input mode.
 
+            ConsoleHandle handle = ConsoleControl.GetConioDeviceHandle();
             ConsoleControl.ConsoleModes m = ConsoleControl.GetMode(handle);
 
-            const ConsoleControl.ConsoleModes desiredMode =
+            const ConsoleControl.ConsoleModes DesiredMode =
                 ConsoleControl.ConsoleModes.LineInput
                 | ConsoleControl.ConsoleModes.EchoInput
                 | ConsoleControl.ConsoleModes.ProcessedInput;
 
-            if ((m & desiredMode) != desiredMode || (m & ConsoleControl.ConsoleModes.MouseInput) > 0)
+            if ((m & DesiredMode) != DesiredMode || (m & ConsoleControl.ConsoleModes.MouseInput) > 0)
             {
                 m &= ~ConsoleControl.ConsoleModes.MouseInput;
-                m |= desiredMode;
+                m |= DesiredMode;
                 ConsoleControl.SetMode(handle, m);
             }
-            // If more characters are typed than you asked, then the next call to ReadConsole will return the 
+
+            // If more characters are typed than you asked, then the next call to ReadConsole will return the
             // additional characters beyond those you requested.
-            // 
-            // If input is terminated with a tab key, then the buffer returned will have a tab (ascii 0x9) at the 
-            // position where the tab key was hit.  If the user has arrowed backward over existing input in the line 
+            //
+            // If input is terminated with a tab key, then the buffer returned will have a tab (ascii 0x9) at the
+            // position where the tab key was hit.  If the user has arrowed backward over existing input in the line
             // buffer, the tab will overwrite whatever character was in that position. That character will be lost in
             // the input buffer, but since we echo each character the user types, it's still in the active screen buffer
             // and we can read the console output to get that character.
-            // 
-            // If input is terminated with an enter key, then the buffer returned will have ascii 0x0D and 0x0A 
+            //
+            // If input is terminated with an enter key, then the buffer returned will have ascii 0x0D and 0x0A
             // (Carriage Return and Line Feed) as the last two characters of the buffer.
             //
-            // If input is terminated with a break key (Ctrl-C, Ctrl-Break, Close, etc.), then the buffer will be 
+            // If input is terminated with a break key (Ctrl-C, Ctrl-Break, Close, etc.), then the buffer will be
             // the empty string.
 
-            uint keyState = 0;
-            string restOfLine = null;
-
             _rawui.ClearKeyCache();
+            uint keyState = 0;
+            string s = string.Empty;
+            Span<char> inputBuffer = stackalloc char[MaxInputLineLength + 1];
+            if (initialContent.Length > 0)
+            {
+                initialContent.AsSpan().CopyTo(inputBuffer);
+            }
 
             do
             {
-                s += ConsoleControl.ReadConsole(handle, initialContent, maxInputLineLength, endOnTab, out keyState);
-
+                s += ConsoleControl.ReadConsole(handle, initialContent.Length, inputBuffer, MaxInputLineLength, endOnTab, out keyState);
                 Util.Assert(s != null, "s should never be null");
 
                 if (s.Length == 0)
@@ -1323,21 +1485,22 @@ namespace MS.DbgShell
 
                         throw new PipelineStoppedException();
                     }
+
                     break;
                 }
 
-                if (s.EndsWith(Crlf, StringComparison.CurrentCulture))
+                if (s.EndsWith(Environment.NewLine, StringComparison.Ordinal))
                 {
                     result = ReadLineResult.endedOnEnter;
-                    s = s.Remove(s.Length - Crlf.Length);
+                    s = s.Remove(s.Length - Environment.NewLine.Length);
                     break;
                 }
 
-                int i = s.IndexOf(Tab, StringComparison.CurrentCulture);
+                int i = s.IndexOf(Tab, StringComparison.Ordinal);
 
                 if (endOnTab && i != -1)
                 {
-                    // then the tab we found is the completion character.  bit 0x10 is set if the shift key was down 
+                    // then the tab we found is the completion character.  bit 0x10 is set if the shift key was down
                     // when the key was hit.
 
                     if ((keyState & 0x10) == 0)
@@ -1350,12 +1513,12 @@ namespace MS.DbgShell
                     }
                     else
                     {
-                        // do nothing: leave the result state as it was. This is the circumstance when we've have to 
+                        // do nothing: leave the result state as it was. This is the circumstance when we've have to
                         // do more than one iteration and the input ended on a tab or shift-tab, or the user hit
                         // enter, or the user hit ctrl-c
                     }
 
-                    // also clean up the screen -- if the cursor was positioned somewhere before the last character 
+                    // also clean up the screen -- if the cursor was positioned somewhere before the last character
                     // in the input buffer, then the characters from the tab to the end of the buffer need to be
                     // erased.
                     int leftover = RawUI.LengthInBufferCells(s.Substring(i + 1));
@@ -1368,7 +1531,7 @@ namespace MS.DbgShell
                         // is overridden by the tab
                         char charUnderCursor = GetCharacterUnderCursor(c);
 
-                        Write(new string(' ', leftover));
+                        Write(Utils.Padding(leftover));
                         RawUI.CursorPosition = c;
 
                         restOfLine = s[i] + (charUnderCursor + s.Substring(i + 1));
@@ -1386,21 +1549,9 @@ namespace MS.DbgShell
             while (true);
 
             Util.Assert(
-                    (s == null && result == ReadLineResult.endedOnBreak)
-                || (s != null && result != ReadLineResult.endedOnBreak),
-                "s should only be null if input ended with a break");
-
-            if (transcribeResult)
-            {
-                PostRead(s);
-            }
-            else
-            {
-                PostRead();
-            }
-
-            if (restOfLine != null)
-                s += restOfLine;
+                       (s == null && result == ReadLineResult.endedOnBreak)
+                       || (s != null && result != ReadLineResult.endedOnBreak),
+                       "s should only be null if input ended with a break");
 
             return s;
         }
@@ -1432,7 +1583,6 @@ namespace MS.DbgShell
             Util.Assert(false, "the character at the cursor should be retrieved, never gets to here");
             return '\0';
         }
-
 
         /// <summary>
         /// Strip nulls from a string...
@@ -1498,9 +1648,6 @@ namespace MS.DbgShell
 
                 input = ReadLine(true, lastInput, out rlResult, false, false);
 
-                Coordinates endOfInputCursorPos = RawUI.CursorPosition;
-                string completedInput = null;
-
                 if (input == null)
                 {
                     break;
@@ -1511,9 +1658,13 @@ namespace MS.DbgShell
                     break;
                 }
 
+
+                Coordinates endOfInputCursorPos = RawUI.CursorPosition;
+                string completedInput = null;
+
                 if (rlResult == ReadLineResult.endedOnTab || rlResult == ReadLineResult.endedOnShiftTab)
                 {
-                    int tabIndex = input.IndexOf(Tab, StringComparison.CurrentCulture);
+                    int tabIndex = input.IndexOf(Tab, StringComparison.Ordinal);
                     Util.Assert(tabIndex != -1, "tab should appear in the input");
 
                     string restOfLine = string.Empty;
@@ -1552,9 +1703,9 @@ namespace MS.DbgShell
                         completedInput += restOfLine;
                     }
 
-                    if (completedInput.Length > (maxInputLineLength - 2))
+                    if (completedInput.Length > (MaxInputLineLength - 2))
                     {
-                        completedInput = completedInput.Substring(0, maxInputLineLength - 2);
+                        completedInput = completedInput.Substring(0, MaxInputLineLength - 2);
                     }
 
                     // Remove any nulls from the string...
@@ -1619,6 +1770,13 @@ namespace MS.DbgShell
             while (true);
 
             // Since we did not transcribe any call to ReadLine, transcribe the results here.
+
+         // if (_parent.IsTranscribing)
+         // {
+         //     // Reads always terminate with the enter key, so add that.
+
+         //     _parent.WriteLineToTranscript(input);
+         // }
 
             return input;
         }

@@ -18,10 +18,8 @@ namespace MS.DbgShell
     internal partial class ColorHostUserInterface : PSHostUserInterface
     {
         /// <summary>
-        /// 
-        /// Called at the end of a prompt loop to take down any progress display that might have appeared and purge any 
+        /// Called at the end of a prompt loop to take down any progress display that might have appeared and purge any
         /// outstanding progress activity state.
-        /// 
         /// </summary>
 
         internal
@@ -64,12 +62,9 @@ namespace MS.DbgShell
         }
 
 
-
         /// <summary>
-        ///
-        /// Invoked by ConsoleHostUserInterface.WriteProgress to update the set of outstanding activities for which 
+        /// Invoked by ConsoleHostUserInterface.WriteProgress to update the set of outstanding activities for which
         /// ProgressRecords have been received.
-        ///
         /// </summary>
 
         private
@@ -138,8 +133,6 @@ namespace MS.DbgShell
             }
         }
 
-
-
         private
         void
         PostWrite()
@@ -150,29 +143,24 @@ namespace MS.DbgShell
             }
         }
 
-
-
         private
         void
-        PostWrite(string value)
+        PostWrite(ReadOnlySpan<char> value, bool newLine)
         {
             PostWrite();
 
-          //if (_parent.IsTranscribing)
-          //{
-          //    try
-          //    {
-          //        _parent.WriteToTranscript(value);
-          //    }
-          //    catch (Exception e)
-          //    {
-          //        ConsoleHost.CheckForSevereException(e);
-          //        _parent.IsTranscribing = false;
-          //    }
-          //}
+         // if (_parent.IsTranscribing)
+         // {
+         //     try
+         //     {
+         //         _parent.WriteToTranscript(value, newLine);
+         //     }
+         //     catch (Exception)
+         //     {
+         //         _parent.IsTranscribing = false;
+         //     }
+         // }
         }
-
-
 
         private
         void
@@ -184,8 +172,6 @@ namespace MS.DbgShell
             }
         }
 
-
-
         private
         void
         PostRead()
@@ -196,30 +182,25 @@ namespace MS.DbgShell
             }
         }
 
-
-
         private
         void
         PostRead(string value)
         {
             PostRead();
 
-          //if (_parent.IsTranscribing)
-          //{
-          //    try
-          //    {
-          //        // Reads always terminate with the enter key, so add that.
-          //        _parent.WriteToTranscript(value + Crlf);
-          //    }
-          //    catch (Exception e)
-          //    {
-          //        ConsoleHost.CheckForSevereException(e);
-          //        _parent.IsTranscribing = false;
-          //    }
-          //}
+         // if (_parent.IsTranscribing)
+         // {
+         //     try
+         //     {
+         //         // Reads always terminate with the enter key, so add that.
+         //         _parent.WriteLineToTranscript(value);
+         //     }
+         //     catch (Exception)
+         //     {
+         //         _parent.IsTranscribing = false;
+         //     }
+         // }
         }
-
-
 
         private ProgressPane _progPane = null;
         private PendingProgress _pendingProgress = null;
@@ -227,7 +208,5 @@ namespace MS.DbgShell
      // private Timer _progPaneUpdateTimer;
      // private const int UpdateTimerThreshold = 100;
     }
-}   // namespace 
-
-
+}   // namespace
 

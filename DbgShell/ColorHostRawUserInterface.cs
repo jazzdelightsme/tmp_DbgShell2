@@ -1,6 +1,5 @@
-﻿/********************************************************************++
-Copyright (c) Microsoft Corporation.  All rights reserved.
---********************************************************************/
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 
 
@@ -33,12 +32,9 @@ namespace MS.DbgShell
     internal sealed class ColorHostRawUserInterface : PSHostRawUserInterface
     {
         /// <summary>
-        /// 
         /// </summary>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining the buffer's foreground and background color failed
-        /// 
         /// </exception>
 
         internal ColorHostRawUserInterface( ColorHostUserInterface ui )
@@ -76,22 +72,16 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// 
-        /// See base class
-        /// 
+        /// See base class.
         /// </summary>
         /// <value></value>
         /// <exception cref="ArgumentException">
-        /// 
         /// If set to an invalid ConsoleColor
-        /// 
         /// </exception>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining information about the buffer failed
         ///    OR
         ///    Win32's SetConsoleTextAttribute
-        /// 
         /// </exception>
 
         public override
@@ -111,22 +101,16 @@ namespace MS.DbgShell
 
 
         /// <summary>
-        /// 
-        /// See base class
-        /// 
+        /// See base class.
         /// </summary>
         /// <value></value>
         /// <exception cref="ArgumentException">
-        /// 
         /// If set to an invalid ConsoleColor
-        /// 
         /// </exception>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining information about the buffer failed
         ///    OR
         ///    Win32's SetConsoleTextAttribute
-        /// 
         /// </exception>
 
         public override
@@ -146,22 +130,16 @@ namespace MS.DbgShell
 
 
         /// <summary>
-        /// 
-        /// See base class 
-        /// 
+        /// See base class.
         /// </summary>
         /// <value></value>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// 
         /// If set to outside of the buffer
-        /// 
         /// </exception>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining information about the buffer failed
         ///    OR
         ///    Win32's SetConsoleCursorPosition failed
-        /// 
         /// </exception>
         public override
         Coordinates
@@ -175,9 +153,10 @@ namespace MS.DbgShell
                 Coordinates c = new Coordinates(bufferInfo.CursorPosition.X, bufferInfo.CursorPosition.Y);
                 return c;
             }
+
             set
             {
-                // cursor position can't be outside the buffer area 
+                // cursor position can't be outside the buffer area
 
                 ConsoleControl.CONSOLE_SCREEN_BUFFER_INFO bufferInfo;
 
@@ -188,31 +167,21 @@ namespace MS.DbgShell
             }
         }
 
-
-
         /// <summary>
-        /// 
-        /// See base class
-        /// 
+        /// See base class.
         /// </summary>
         /// <value>
-        /// 
         /// Cursor size
-        /// 
         /// </value>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// 
         /// If set to under 0 or over 100
-        /// 
         /// </exception>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining a handle to the active screen buffer failed
         ///    OR
         ///    Win32's GetConsoleCursorInfo failed
         ///    OR
         ///    Win32's SetConsoleCursorInfo failed
-        /// 
         /// </exception>
 
         public override
@@ -226,6 +195,7 @@ namespace MS.DbgShell
 
                 return size;
             }
+
             set
             {
                 const int MinCursorSize = 0;
@@ -256,25 +226,17 @@ namespace MS.DbgShell
             }
         }
 
-
-
         /// <summary>
-        /// 
-        /// See base class
-        /// 
+        /// See base class.
         /// </summary>
         /// <value></value>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// 
         /// If set outside of the buffer
-        /// 
         /// </exception>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining information about the buffer failed
         ///    OR
         ///    Win32's SetConsoleWindowInfo failed
-        /// 
         /// </exception>
 
         public override
@@ -290,6 +252,7 @@ namespace MS.DbgShell
 
                 return c;
             }
+
             set
             {
                 ConsoleControl.CONSOLE_SCREEN_BUFFER_INFO bufferInfo;
@@ -297,7 +260,7 @@ namespace MS.DbgShell
                 ConsoleHandle handle = GetBufferInfo(out bufferInfo);
                 ConsoleControl.SMALL_RECT r = bufferInfo.WindowRect;
 
-                // the dimensions of the window can't extend past the dimensions of the screen buffer.  This means that the 
+                // the dimensions of the window can't extend past the dimensions of the screen buffer.  This means that the
                 // X position of the window is limited to the buffer width minus one minus the window width, and the Y
                 // position of the window is limited to the buffer height minus one minus the window height.
                 int windowWidth = r.Right - r.Left + 1;
@@ -316,7 +279,7 @@ namespace MS.DbgShell
                 r.Left = (short)value.X;
                 r.Top = (short)value.Y;
 
-                // subtract 1 from each dimension because the semantics of the win32 api are not "number of characters in 
+                // subtract 1 from each dimension because the semantics of the win32 api are not "number of characters in
                 // span" but "starting and ending position"
                 r.Right = (short)(r.Left + windowWidth - 1);
                 r.Bottom = (short)(r.Top + windowHeight - 1);
@@ -326,27 +289,19 @@ namespace MS.DbgShell
             }
         }
 
-
-
         /// <summary>
-        /// 
-        /// See base class
-        /// 
+        /// See base class.
         /// </summary>
         /// <value></value>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// 
         /// If setting to an invalid size
-        /// 
         /// </exception>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining a handle to the active screen buffer failed
         ///    OR
         ///    obtaining information about the buffer failed
         ///    OR
         ///    Win32's SetConsoleScreenBufferSize failed
-        /// 
         /// </exception>
 
         public override
@@ -359,9 +314,10 @@ namespace MS.DbgShell
                 GetBufferInfo(out bufferInfo);
                 return new Size(bufferInfo.BufferSize.X, bufferInfo.BufferSize.Y);
             }
+
             set
             {
-                // looking in windows/core/ntcon/server/output.c, it looks like the minimum size is 1 row X however many 
+                // looking in windows/core/ntcon/server/output.c, it looks like the minimum size is 1 row X however many
                 // characters will fit in the minimum window size system metric (SM_CXMIN).  Instead of going to the effort of
                 // computing that minimum here, it is cleaner and cheaper to make the call to SetConsoleScreenBuffer and just
                 // translate any exception that might get thrown.
@@ -386,26 +342,18 @@ namespace MS.DbgShell
             }
         }
 
-
-
         /// <summary>
-        /// 
-        /// See base class
-        /// 
+        /// See base class.
         /// </summary>
         /// <value></value>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// 
         /// If setting width or height to less than 1, larger than the screen buffer,
         ///  over the maximum window size allowed
-        /// 
         /// </exception>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining information about the buffer failed
         ///    OR
         ///    Win32's SetConsoleWindowInfo failed
-        /// 
         /// </exception>
 
         public override
@@ -424,13 +372,14 @@ namespace MS.DbgShell
 
                 return s;
             }
+
             set
             {
                 ConsoleControl.CONSOLE_SCREEN_BUFFER_INFO bufferInfo;
 
                 ConsoleHandle handle = GetBufferInfo(out bufferInfo);
 
-                // the dimensions of the window can't extend past the dimensions of the screen buffer.  This means that the 
+                // the dimensions of the window can't extend past the dimensions of the screen buffer.  This means that the
                 // width of the window is limited to the buffer width minus one minus the window X position, and the height
                 // of the window is limited to the buffer height minus one minus the window Y position.
 
@@ -464,12 +413,12 @@ namespace MS.DbgShell
                     throw new ArgumentOutOfRangeException( "value.Height", value.Height, Util.Sprintf( WindowHeightTooLargeErrorTemplateResource, bufferInfo.MaxWindowSize.Y ) );
                 }
 
-                // if the new size will extend past the edge of screen buffer, then move the window position to try to 
+                // if the new size will extend past the edge of screen buffer, then move the window position to try to
                 // accomodate that.
 
                 ConsoleControl.SMALL_RECT r = bufferInfo.WindowRect;
 
-                // subtract 1 from each dimension because the semantics of the win32 api are not "number of characters in 
+                // subtract 1 from each dimension because the semantics of the win32 api are not "number of characters in
                 // span" but "starting and ending position"
 
                 r.Right = (short)(r.Left + value.Width - 1);
@@ -478,7 +427,7 @@ namespace MS.DbgShell
                 // Now we check if the bottom right coordinate of our window went over the coordinate of the bottom
                 // right of the buffer.  If it did then we need to adjust the window.
 
-                // bufferInfo.BufferSize.X - 1  will give us the rightmost coordinate of the buffer.
+                // bufferInfo.BufferSize.X - 1 will give us the rightmost coordinate of the buffer.
                 // r.Right - rightCoordinateOfBuffer will give us how much we need to adjust the window left and right coordinates.
                 // Then we can do the same for top and bottom.
                 short adjustLeft = (short)(r.Right - (bufferInfo.BufferSize.X - 1));
@@ -510,18 +459,12 @@ namespace MS.DbgShell
             }
         }
 
-
-
         /// <summary>
-        /// 
-        /// See base class
-        /// 
+        /// See base class.
         /// </summary>
         /// <value></value>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining information about the buffer failed
-        /// 
         /// </exception>
 
         public override
@@ -538,20 +481,14 @@ namespace MS.DbgShell
             }
         }
 
-
-
         /// <summary>
-        /// 
-        /// See base class
-        /// 
+        /// See base class.
         /// </summary>
         /// <value></value>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining a handle to the active screen buffer failed
         ///    OR
         ///    Win32's GetLargestConsoleWindowSize failed
-        /// 
         /// </exception>
 
         public override
@@ -566,7 +503,7 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// Helper method to create and trace PipelineStoppedException
+        /// Helper method to create and trace PipelineStoppedException.
         /// </summary>
         /// <returns></returns>
         private PipelineStoppedException NewPipelineStoppedException()
@@ -576,10 +513,10 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// Used by ReadKey, cache KeyEvent based on if input.RepeatCount > 1
+        /// Used by ReadKey, cache KeyEvent based on if input.RepeatCount > 1.
         /// </summary>
-        /// <param name="input">Input key event record</param>
-        /// <param name="cache">Cache key event</param>
+        /// <param name="input">Input key event record.</param>
+        /// <param name="cache">Cache key event.</param>
         private static void CacheKeyEvent(ConsoleControl.KEY_EVENT_RECORD input, ref ConsoleControl.KEY_EVENT_RECORD cache)
         {
             if (input.RepeatCount > 1)
@@ -590,7 +527,6 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// 
         /// See base class
         /// This method unwraps the repeat count in KEY_EVENT_RECORD by caching repeated keystrokes
         /// in a logical queue. The implications are:
@@ -599,24 +535,19 @@ namespace MS.DbgShell
         ///    key events: {Ctrl, KeyDown}, {Ctrl-c KeyDown}, {Ctrl, KeyUp}, {c, KeyUp} if Ctrl is released before c.
         ///    In this case, {Ctrl, KeyUp}, {c, KeyUp} would be returned.
         /// 2) If the cache is non-empty, a call to ReadLine will not return the cached keys. This
-        ///    behavior is the same as that of System.Console.ReadKey
-        /// 
+        ///    behavior is the same as that of System.Console.ReadKey.
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentException">
-        /// 
         /// If neither IncludeKeyDown or IncludeKeyUp is set in <paramref name="options"/>
-        /// 
         /// </exception>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining a handle to the active screen buffer failed
         ///    OR
         ///    Win32's setting input buffer mode to disregard window and mouse input failed
         ///    OR
         ///    Win32's ReadConsoleInput failed
-        /// 
         /// </exception>
 
         public override
@@ -642,13 +573,14 @@ namespace MS.DbgShell
                     throw NewPipelineStoppedException();
                 }
                 // If IncludeKeyUp is not set and cached key events are KeyUp OR
-                //    IncludeKeyDown is not set and cached key events are KeyDown, clear the cache 
+                //    IncludeKeyDown is not set and cached key events are KeyDown, clear the cache
                 if ((((options & ReadKeyOptions.IncludeKeyUp) == 0) && !cachedKeyEvent.KeyDown) ||
                      (((options & ReadKeyOptions.IncludeKeyDown) == 0) && cachedKeyEvent.KeyDown))
                 {
                     cachedKeyEvent.RepeatCount = 0;
                 }
             }
+
             if (cachedKeyEvent.RepeatCount > 0)
             {
                 KEY_EVENT_RECORDToKeyInfo(cachedKeyEvent, out keyInfo);
@@ -656,7 +588,7 @@ namespace MS.DbgShell
             }
             else
             {
-                ConsoleHandle handle = ConsoleControl.GetInputHandle();
+                ConsoleHandle handle = ConsoleControl.GetConioDeviceHandle();
                 ConsoleControl.INPUT_RECORD[] inputRecords = new ConsoleControl.INPUT_RECORD[1];
                 ConsoleControl.ConsoleModes originalMode = ConsoleControl.GetMode(handle);
 
@@ -731,8 +663,6 @@ namespace MS.DbgShell
             return keyInfo;
         }
 
-
-
         private static
         void
         KEY_EVENT_RECORDToKeyInfo(ConsoleControl.KEY_EVENT_RECORD keyEventRecord, out KeyInfo keyInfo)
@@ -744,47 +674,35 @@ namespace MS.DbgShell
                 keyEventRecord.KeyDown);
         }
 
-
-
         /// <summary>
-        /// 
-        /// See base class
-        /// 
+        /// See base class.
         /// </summary>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining a handle to the active screen buffer failed
         ///    OR
         ///    Win32's FlushConsoleInputBuffer failed
-        /// 
         /// </exception>
 
         public override
         void
         FlushInputBuffer()
         {
-            ConsoleHandle handle = ConsoleControl.GetInputHandle();
+            ConsoleHandle handle = ConsoleControl.GetConioDeviceHandle();
             ConsoleControl.FlushConsoleInputBuffer(handle);
 
             cachedKeyEvent.RepeatCount = 0;
         }
 
-
-
         /// <summary>
-        /// 
-        /// See base class
-        /// 
+        /// See base class.
         /// </summary>
         /// <returns></returns>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining a handle to the active screen buffer failed
         ///    OR
         ///    Win32's GetNumberOfConsoleInputEvents failed
         ///    OR
         ///    Win32's PeekConsoleInput failed
-        /// 
         /// </exception>
 
         public override
@@ -798,13 +716,13 @@ namespace MS.DbgShell
                     return true;
                 }
 
-                ConsoleHandle handle = ConsoleControl.GetInputHandle();
+                ConsoleHandle handle = ConsoleControl.GetConioDeviceHandle();
                 ConsoleControl.INPUT_RECORD[] inputRecords =
                     new ConsoleControl.INPUT_RECORD[ConsoleControl.GetNumberOfConsoleInputEvents(handle)];
 
-                int acutalNumberOfInputRecords = ConsoleControl.PeekConsoleInput(handle, ref inputRecords);
+                int actualNumberOfInputRecords = ConsoleControl.PeekConsoleInput(handle, ref inputRecords);
 
-                for (int i = 0; i < acutalNumberOfInputRecords; i++)
+                for (int i = 0; i < actualNumberOfInputRecords; i++)
                 {
                     if (((ConsoleControl.InputRecordEventTypes)inputRecords[i].EventType) ==
                             ConsoleControl.InputRecordEventTypes.KEY_EVENT)
@@ -820,6 +738,7 @@ namespace MS.DbgShell
                             // represent a keystroke.
                             continue;
                         }
+
                         return true;
                     }
                 }
@@ -828,25 +747,17 @@ namespace MS.DbgShell
             }
         }
 
-
         /// <summary>
-        /// 
-        /// See base class
-        /// 
+        /// See base class.
         /// </summary>
         /// <value></value>
         /// <exception cref="ArgumentNullException">
-        /// 
         /// If set to null
-        /// 
         /// </exception>
         /// <exception cref="ArgumentException">
-        /// 
         /// If set to a string whose length is not between 1 to 1023
-        /// 
         /// </exception>
         /// <exception cref="HostException">
-        /// 
         /// If Win32's GetConsoleWindowTitle failed
         ///    OR
         ///    Win32's SetConsoleWindowTitle failed
@@ -889,39 +800,28 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// 
         /// See base class.
-        ///
-        /// 
         /// </summary>
         /// <param name="origin">
-        /// 
         /// location on screen buffer where contents will be written
-        /// 
         /// </param>
         /// <param name="contents">
-        /// 
         /// array of info to be written
-        /// 
         /// </param>
         /// <remarks></remarks>
         /// <exception cref="ArgumentOutOfRangeException">
-        /// 
         /// If <paramref name="origin"/> is outside of the screen buffer.
         ///    OR
         ///    <paramref name="contents"/> is an ill-formed BufferCell array
         ///    OR
         ///    it is illegal to write <paramref name="contents"/> at <paramref name="origin"/> in the buffer
-        /// 
         /// </exception>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining a handle to the active screen buffer failed
         ///    OR
         ///    obtaining information about the buffer failed
         ///    OR
         ///    there is not enough memory to complete calls to Win32's WriteConsoleOutput
-        /// 
         /// </exception>
 
         public override
@@ -939,54 +839,40 @@ namespace MS.DbgShell
             ConsoleHandle handle = GetBufferInfo(out bufferInfo);
             CheckCoordinateWithinBuffer(ref origin, ref bufferInfo, "origin");
 
-            // The output is clipped by the console subsystem, so we don't have to check that the array exceeds the buffer 
+            // The output is clipped by the console subsystem, so we don't have to check that the array exceeds the buffer
             // boundaries.
 
             ConsoleControl.WriteConsoleOutput(handle, origin, contents);
         }
 
-
-
         /// <summary>
-        /// 
         /// If <paramref name="region"/> is completely outside of the screen buffer, it's a no-op.
-        /// 
         /// </summary>
         /// <param name="region">
-        /// 
         /// region with all elements = -1 means "entire screen buffer"
-        /// 
         /// </param>
         /// <param name="fill">
-        /// 
         /// character and attribute to fill the screen buffer
-        /// 
         /// </param>
         /// <remarks>
-        /// 
         /// Provided for clearing regions -- less chatty than passing an array of cells.
         /// Clear screen is:
         ///    SetBufferContents(new Rectangle(-1, -1, -1, -1), ' ', ForegroundColor, BackgroundColor);
         ///    CursorPosition = new Coordinates(0, 0);
-        /// 
+        ///
         /// fill.Type is ignored
-        /// 
         /// </remarks>
         /// <exception cref="ArgumentException">
-        /// 
         /// If <paramref name="region"/>'s Left exceeds Right or Bottom exceeds Top
         ///    OR
         ///    it is illegal to set <paramref name="region"/> in the buffer with <paramref name="fill"/>
-        /// 
         /// </exception>
         /// <exception cref="HostException">
-        /// 
         /// If Win32's CreateFile fails
         ///    OR
         ///    Win32's GetConsoleScreenBufferInfo fails
         ///    OR
         ///    there is not enough memory to complete calls to Win32's WriteConsoleOutput
-        /// 
         /// </exception>
         public override
         void
@@ -1032,7 +918,7 @@ namespace MS.DbgShell
 
             // The FillConsoleOutputXxx functions wrap at the end of a line.  So we need to convert our rectangular region
             // into line segments that don't extend past the end of a line.  We will also clip the rectangle so that the semantics
-            // are the same as SetBufferContents(Coordinates, BufferCell[,]), which clips if the rectangle extends past the 
+            // are the same as SetBufferContents(Coordinates, BufferCell[,]), which clips if the rectangle extends past the
             // screen buffer boundaries.
             if (region.Left >= bufferWidth || region.Top >= bufferHeight || region.Right < 0 || region.Bottom < 0)
             {
@@ -1104,16 +990,18 @@ namespace MS.DbgShell
                         }
                     }
                 }
+
                 if (lineLength % 2 == 1)
                 {
                     lineLength++;
                 }
             }
+
             for (int row = firstRow; row <= lastRow; ++row)
             {
                 origin.Y = row;
 
-                // we know that lineStart and lineEnd will always be within the buffer area because of previous boundary 
+                // we know that lineStart and lineEnd will always be within the buffer area because of previous boundary
                 // checks already done.
 
                 ConsoleControl.FillConsoleOutputCharacter(handle, fill.Character, lineLength, origin);
@@ -1121,37 +1009,25 @@ namespace MS.DbgShell
             }
         }
 
-
-
         /// <summary>
-        /// 
         /// See base class.
         /// If the rectangle is invalid, ie, Right exceeds Left OR Bottom exceeds Top,
-        /// 
         /// </summary>
         /// <param name="region">
-        /// 
         /// area on screen buffer to be read
-        /// 
         /// </param>
         /// <returns>
-        /// 
         /// an array of BufferCell containing screen buffer contents
-        /// 
         /// </returns>
         /// <exception cref="ArgumentException">
-        /// 
         /// If <paramref name="region"/>'s Left exceeds Right or Bottom exceeds Top.
-        /// 
         /// </exception>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining a handle to the active screen buffer failed
         ///    OR
         ///    obtaining information about the buffer failed
         ///    OR
         ///    there is not enough memory to complete calls to Win32's ReadConsoleOutput
-        /// 
         /// </exception>
 
         public override
@@ -1202,39 +1078,25 @@ namespace MS.DbgShell
             return contents;
         }
 
-
-
         /// <summary>
-        /// 
-        /// See base class 
-        /// 
+        /// See base class.
         /// </summary>
         /// <param name="source">
-        /// 
         /// area to be moved
-        /// 
         /// </param>
         /// <param name="destination">
-        /// 
         /// top left corner to which source to be moved
-        /// 
         /// </param>
         /// <param name="clip">
-        /// 
         /// area to be updated caused by the move
-        /// 
         /// </param>
         /// <param name="fill">
-        /// 
         /// character and attribute to fill the area vacated by the move
-        /// 
         /// </param>
         /// <exception cref="HostException">
-        /// 
         /// If obtaining the active screen buffer failed
         ///    OR
         ///    Call to Win32's ScrollConsoleScreenBuffer failed
-        /// 
         /// </exception>
         public override
         void
@@ -1279,14 +1141,12 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// See base class
+        /// See base class.
         /// </summary>
         /// <param name="s"></param>
         /// <returns></returns>
         /// <exception cref="HostException">
-        /// 
         /// If Win32's WideCharToMultiByte fails
-        /// 
         /// </exception>
 
         public override
@@ -1296,15 +1156,13 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// See base class
+        /// See base class.
         /// </summary>
         /// <param name="s"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
         /// <exception cref="HostException">
-        /// 
         /// If Win32's WideCharToMultiByte fails
-        /// 
         /// </exception>
 
         public override
@@ -1314,21 +1172,17 @@ namespace MS.DbgShell
             {
                 throw new ArgumentNullException( "str" );
             }
-            return ConsoleControl.LengthInBufferCells(s, offset);
+
+            return ConsoleControl.LengthInBufferCells(s, offset, parent.SupportsVirtualTerminal);
         }
 
-
         /// <summary>
-        /// 
-        /// See base class
-        /// 
+        /// See base class.
         /// </summary>
         /// <param name="c"></param>
         /// <returns></returns>
         /// <exception cref="HostException">
-        /// 
         /// If Win32's WideCharToMultiByte fails
-        /// 
         /// </exception>
 
         public override
@@ -1337,12 +1191,10 @@ namespace MS.DbgShell
             return ConsoleControl.LengthInBufferCells(c);
         }
 
-#region internal
+        #region internal
 
         /// <summary>
-        /// 
-        /// Clear the ReadKey cache
-        /// 
+        /// Clear the ReadKey cache.
         /// </summary>
         /// <exception/>
         internal void ClearKeyCache()
@@ -1350,14 +1202,12 @@ namespace MS.DbgShell
             cachedKeyEvent.RepeatCount = 0;
         }
 
-#endregion internal
+        #endregion internal
 
-#region helpers
-
+        #region helpers
 
         // pass-by-ref for speed.
         /// <summary>
-        /// 
         /// </summary>
         /// <param name="c"></param>
         /// <param name="bufferInfo"></param>
@@ -1380,9 +1230,8 @@ namespace MS.DbgShell
             }
         }
 
-
         /// <summary>
-        /// Get output buffer info
+        /// Get output buffer info.
         /// </summary>
         /// <param name="bufferInfo"></param>
         /// <returns></returns>
@@ -1400,9 +1249,7 @@ namespace MS.DbgShell
             return result;
         }
 
-
-
-#endregion helpers
+        #endregion helpers
 
         private const string InvalidConsoleColorErrorResource = "Cannot set the console color because the value specified is not valid. Specify a valid color as defined by the System.ConsoleColor type."; //"InvalidConsoleColorError";
         private const string InvalidCursorSizeErrorResource = "Cannot process CursorSize because the cursor size specified is not valid."; //"InvalidCursorSizeError";

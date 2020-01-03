@@ -42,6 +42,11 @@ namespace MS.Dbg
             return StringComparer.OrdinalIgnoreCase.Compare( s1, s2 );
         }
 
+        public static int Strcmp_OI( ReadOnlySpan<char> s1, ReadOnlySpan<char> s2 )
+        {
+            return MemoryExtensions.CompareTo( s1, s2, StringComparison.OrdinalIgnoreCase );
+        }
+
         // II: InvariantCultureIgnoreCase
         public static int Strcmp_II( string s1, string s2 )
         {

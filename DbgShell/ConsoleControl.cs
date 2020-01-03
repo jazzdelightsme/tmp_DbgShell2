@@ -1,17 +1,16 @@
-/********************************************************************++
-Copyright (c) Microsoft Corporation.  All rights reserved.
---********************************************************************/
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 
 
 // Implementation notes: In the functions that take ConsoleHandle parameters, we only assert that the handle is valid and not
-// closed, as opposed to doing a check and throwing an exception.  This is because the win32 APIs that those functions wrap will 
+// closed, as opposed to doing a check and throwing an exception.  This is because the win32 APIs that those functions wrap will
 // fail on invalid/closed handles, and the check for API failure will throw the exception.
 //
-// On the use of DangerousGetHandle: If the handle has been invalidated, then the API we pass it to will return an error.  These 
-// handles should not be exposed to recycling attacks (because they are not exposed at all), but if they were, the worse they 
+// On the use of DangerousGetHandle: If the handle has been invalidated, then the API we pass it to will return an error.  These
+// handles should not be exposed to recycling attacks (because they are not exposed at all), but if they were, the worse they
 // could do is diddle with the console buffer.
 #pragma warning disable 1634, 1691
-
 
 using System;
 using System.Text;
@@ -27,9 +26,9 @@ using Microsoft.Win32.SafeHandles;
 
 using ConsoleHandle = Microsoft.Win32.SafeHandles.SafeFileHandle;
 
-using WORD   = System.UInt16;
-using ULONG  = System.UInt32;
-using DWORD  = System.UInt32;
+using WORD = System.UInt16;
+using ULONG = System.UInt32;
+using DWORD = System.UInt32;
 using NakedWin32Handle = System.IntPtr;
 using HWND = System.IntPtr;
 using HDC = System.IntPtr;
@@ -39,19 +38,17 @@ using MS.Dbg;
 namespace MS.DbgShell
 {
     /// <summary>
-    ///
-    /// Class ConsoleControl is used to wrap the various win32 console APIs 1:1 (i.e. at a low level, without attempting to be a 
+    /// Class ConsoleControl is used to wrap the various win32 console APIs 1:1 (i.e. at a low level, without attempting to be a
     /// "true" object-oriented library.
-    ///
     /// </summary>
 
     internal static partial class ConsoleControl
     {
-#region structs
+        #region structs
 
         internal enum InputRecordEventTypes : ushort
         {
-            // from wincon.h.  These look like bit flags, but of course they could not really be used that way, since it would 
+            // from wincon.h.  These look like bit flags, but of course they could not really be used that way, since it would
             // not make sense to have more than one of the INPUT_RECORD union members "in effect" at any one time.
 
             KEY_EVENT = 0x0001,
@@ -160,7 +157,7 @@ namespace MS.DbgShell
 
             public override string ToString()
             {
-                return String.Format(CultureInfo.InvariantCulture, "{0},{1},{2},{3}", Left, Top, Right, Bottom);
+                return string.Format(CultureInfo.InvariantCulture, "{0},{1},{2},{3}", Left, Top, Right, Bottom);
             }
         }
 
@@ -191,14 +188,14 @@ namespace MS.DbgShell
 
             public override string ToString()
             {
-                return String.Format(CultureInfo.InvariantCulture, "Size: {0}, Visible: {1}", Size, Visible);
+                return string.Format(CultureInfo.InvariantCulture, "Size: {0}, Visible: {1}", Size, Visible);
             }
         }
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct FONTSIGNATURE
         {
-            //From public\sdk\inc\wingdi.h
+            // From public\sdk\inc\wingdi.h
 
             // fsUsb*: A 128-bit Unicode subset bitfield (USB) identifying up to 126 Unicode subranges
             internal DWORD fsUsb0;
@@ -213,7 +210,7 @@ namespace MS.DbgShell
         [StructLayout(LayoutKind.Sequential)]
         internal struct CHARSETINFO
         {
-            //From public\sdk\inc\wingdi.h
+            // From public\sdk\inc\wingdi.h
             internal uint ciCharset;   // Character set value.
             internal uint ciACP;       // ANSI code-page identifier.
             internal FONTSIGNATURE fs;
@@ -222,7 +219,7 @@ namespace MS.DbgShell
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         internal struct TEXTMETRIC
         {
-            //From public\sdk\inc\wingdi.h
+            // From public\sdk\inc\wingdi.h
             public int tmHeight;
             public int tmAscent;
             public int tmDescent;
@@ -245,7 +242,7 @@ namespace MS.DbgShell
             public byte tmCharSet;
         }
 
-#region SentInput Data Structures
+        #region SentInput Data Structures
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct INPUT
@@ -271,36 +268,36 @@ namespace MS.DbgShell
         internal struct MouseInput
         {
             /// <summary>
-            /// The absolute position of the mouse, or the amount of motion since the last mouse event was generated, depending on the value of the dwFlags member. 
+            /// The absolute position of the mouse, or the amount of motion since the last mouse event was generated, depending on the value of the dwFlags member.
             /// Absolute data is specified as the x coordinate of the mouse; relative data is specified as the number of pixels moved.
             /// </summary>
             internal Int32 X;
 
             /// <summary>
-            /// The absolute position of the mouse, or the amount of motion since the last mouse event was generated, depending on the value of the dwFlags member. 
+            /// The absolute position of the mouse, or the amount of motion since the last mouse event was generated, depending on the value of the dwFlags member.
             /// Absolute data is specified as the y coordinate of the mouse; relative data is specified as the number of pixels moved.
             /// </summary>
             internal Int32 Y;
 
             /// <summary>
-            /// If dwFlags contains MOUSEEVENTF_WHEEL, then mouseData specifies the amount of wheel movement. A positive value indicates that the wheel was rotated forward, away from the user; 
+            /// If dwFlags contains MOUSEEVENTF_WHEEL, then mouseData specifies the amount of wheel movement. A positive value indicates that the wheel was rotated forward, away from the user;
             /// a negative value indicates that the wheel was rotated backward, toward the user. One wheel click is defined as WHEEL_DELTA, which is 120.
             /// </summary>
             internal DWORD MouseData;
 
             /// <summary>
             /// A set of bit flags that specify various aspects of mouse motion and button clicks.
-            /// See (http://msdn.microsoft.com/en-us/library/ms646273(VS.85).aspx)
+            /// See (https://msdn.microsoft.com/library/ms646273(VS.85).aspx)
             /// </summary>
             internal DWORD Flags;
 
             /// <summary>
-            /// The time stamp for the event, in milliseconds. If this parameter is 0, the system will provide its own time stamp. 
+            /// The time stamp for the event, in milliseconds. If this parameter is 0, the system will provide its own time stamp.
             /// </summary>
             internal DWORD Time;
 
             /// <summary>
-            /// An additional value associated with the mouse event. An application calls GetMessageExtraInfo to obtain this extra information
+            /// An additional value associated with the mouse event. An application calls GetMessageExtraInfo to obtain this extra information.
             /// </summary>
             internal IntPtr ExtraInfo;
         }
@@ -315,7 +312,7 @@ namespace MS.DbgShell
             internal WORD Vk;
 
             /// <summary>
-            /// A hardware scan code for the key. If dwFlags specifies KEYEVENTF_UNICODE, 
+            /// A hardware scan code for the key. If dwFlags specifies KEYEVENTF_UNICODE,
             /// wScan specifies a Unicode character which is to be sent to the foreground application.
             /// </summary>
             internal WORD Scan;
@@ -333,8 +330,8 @@ namespace MS.DbgShell
             internal DWORD Time;
 
             /// <summary>
-            /// An additional value associated with the keystroke. 
-            /// Use the GetMessageExtraInfo function to obtain this information. 
+            /// An additional value associated with the keystroke.
+            /// Use the GetMessageExtraInfo function to obtain this information.
             /// </summary>
             internal IntPtr ExtraInfo;
         }
@@ -361,33 +358,33 @@ namespace MS.DbgShell
         internal enum VirtualKeyCode : ushort
         {
             /// <summary>
-            /// LEFT ARROW key
+            /// LEFT ARROW key.
             /// </summary>
             Left = 0x25,
 
             /// <summary>
-            /// ENTER key
+            /// ENTER key.
             /// </summary>
             Return = 0x0D,
         }
 
         /// <summary>
-        /// Specify the type of the input
+        /// Specify the type of the input.
         /// </summary>
         internal enum InputType : uint
         {
             /// <summary>
-            /// INPUT_MOUSE = 0x00
+            /// INPUT_MOUSE = 0x00.
             /// </summary>
             Mouse = 0,
 
             /// <summary>
-            /// INPUT_KEYBOARD = 0x01
+            /// INPUT_KEYBOARD = 0x01.
             /// </summary>
             Keyboard = 1,
 
             /// <summary>
-            /// INPUT_HARDWARE = 0x02
+            /// INPUT_HARDWARE = 0x02.
             /// </summary>
             Hardware = 2,
         }
@@ -405,20 +402,20 @@ namespace MS.DbgShell
             KeyUp = 0x0002,
 
             /// <summary>
-            /// If specified, wScan identifies the key and wVk is ignored. 
+            /// If specified, wScan identifies the key and wVk is ignored.
             /// </summary>
             Unicode = 0x0004,
 
             /// <summary>
-            /// If specified, the system synthesizes a VK_PACKET keystroke. The wVk parameter must be zero. 
+            /// If specified, the system synthesizes a VK_PACKET keystroke. The wVk parameter must be zero.
             /// This flag can only be combined with the KEYEVENTF_KEYUP flag.
             /// </summary>
             ScanCode = 0x0008
         }
 
-#endregion SentInput Data Structures
+        #endregion SentInput Data Structures
 
-#endregion structs
+        #endregion structs
 
 #region Window Visibility
         [DllImport("Kernel32.dll")]
@@ -444,9 +441,10 @@ namespace MS.DbgShell
         /// Code to control the display properties of the a window...
         /// </summary>
         /// <param name="hWnd">The window to show...</param>
-        /// <param name="nCmdShow">The command to do</param>
-        /// <returns>true it it was successful</returns>
+        /// <param name="nCmdShow">The command to do.</param>
+        /// <returns>True it it was successful.</returns>
         [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool ShowWindow(IntPtr hWnd, Int32 nCmdShow);
 
         internal static void SetConsoleMode(ProcessWindowStyle style)
@@ -471,12 +469,10 @@ namespace MS.DbgShell
         }
 #endregion
 
-#region Input break handler (Ctrl-C, Ctrl-Break)
+        #region Input break handler (Ctrl-C, Ctrl-Break)
 
         /// <summary>
-        /// 
-        /// Types of control ConsoleBreakSignals received by break Win32Handler delegates
-        /// 
+        /// Types of control ConsoleBreakSignals received by break Win32Handler delegates.
         /// </summary>
 
         internal enum ConsoleBreakSignal : uint
@@ -497,12 +493,12 @@ namespace MS.DbgShell
             None = 0xFF
         }
 
-        // NOTE: this delegate will be executed in its own thread 
+        // NOTE: this delegate will be executed in its own thread
 
         internal delegate bool BreakHandler(ConsoleBreakSignal ConsoleBreakSignal);
 
         /// <summary>
-        /// Set the console's break handler
+        /// Set the console's break handler.
         /// </summary>
         /// <param name="handlerDelegate"></param>
         /// <exception cref="HostException">
@@ -524,7 +520,7 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// Set the console's break handler to null
+        /// Set the console's break handler to null.
         /// </summary>
         /// <exception cref="HostException">
         /// If Win32's SetConsoleCtrlHandler fails
@@ -544,11 +540,11 @@ namespace MS.DbgShell
             }
         }
 
-#endregion
+        #endregion
 
-#region Win32Handles
+        #region Win32Handles
 
-        static readonly Lazy<ConsoleHandle> _inputHandle = new Lazy<SafeFileHandle>(() =>
+        private static readonly Lazy<ConsoleHandle> _keyboardInputHandle = new Lazy<SafeFileHandle>(() =>
             {
                 var handle = NativeMethods.CreateFile(
                     "CONIN$",
@@ -575,21 +571,14 @@ namespace MS.DbgShell
         );
 
         /// <summary>
-        /// 
-        /// Returns a ConsoleHandle to the console input device, even if stdin has been redirected.
-        /// 
+        /// Returns a ConsoleHandle to the console (keyboard device)
         /// </summary>
-        /// <returns></returns>
-        /// <exception cref="HostException">
-        /// If Win32's CreateFile fails
-        /// </exception>
-
-        internal static ConsoleHandle GetInputHandle()
+        internal static ConsoleHandle GetConioDeviceHandle()
         {
-            return _inputHandle.Value;
+            return _keyboardInputHandle.Value;
         }
 
-        static readonly Lazy<ConsoleHandle> _outputHandle = new Lazy<SafeFileHandle>(() =>
+        private static readonly Lazy<ConsoleHandle> _outputHandle = new Lazy<SafeFileHandle>(() =>
             {
                 // We use CreateFile here instead of GetStdWin32Handle, as GetStdWin32Handle will return redirected handles
                 var handle = NativeMethods.CreateFile(
@@ -626,6 +615,8 @@ namespace MS.DbgShell
             return _outputHandle.Value;
         }
 
+        // [danthom] no longer needed?
+        /*
         internal enum StandardHandleId : uint
         {
             // From winnt.h
@@ -648,23 +639,22 @@ namespace MS.DbgShell
                 return NativeMethods.GetStdHandle((DWORD)handleId);
             }
         }
+        */
 
 
 
 #endregion
 
-#region Mode
+        #region Mode
 
         /// <summary>
-        /// 
-        /// flags used by ConsoleControl.GetMode and ConsoleControl.SetMode
-        /// 
+        /// Flags used by ConsoleControl.GetMode and ConsoleControl.SetMode.
         /// </summary>
         [Flags]
         internal enum ConsoleModes : uint
         {
             // These values from wincon.h
-            // input modes 
+            // input modes
             ProcessedInput = 0x001,
             LineInput = 0x002,
             EchoInput = 0x004,
@@ -678,12 +668,12 @@ namespace MS.DbgShell
             ProcessedOutput = 0x001,  // yes, I know they are the same values as some flags defined above.
             WrapEndOfLine = 0x002,
             VirtualTerminal = 0x004,
+            // Error getting console mode
+            Unknown = 0xffffffff,
         }
 
         /// <summary>
-        ///
-        /// Returns a mask of ConsoleModes flags describing the current modality of the console
-        ///
+        /// Returns a mask of ConsoleModes flags describing the current modality of the console.
         /// </summary>
         /// <exception cref="HostException">
         /// If Win32's GetConsoleMode fails
@@ -710,24 +700,16 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// 
-        /// Sets the current mode of the console device
-        /// 
+        /// Sets the current mode of the console device.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// Handle to the console device returned by GetInputHandle
-        /// 
         /// </param>
         /// <param name="mode">
-        /// 
         /// Mask of mode flags
-        /// 
         /// </param>
         /// <exception cref="HostException">
-        /// 
         /// If Win32's SetConsoleMode fails
-        /// 
         /// </exception>
 
         internal static void SetMode(ConsoleHandle consoleHandle, ConsoleModes mode)
@@ -747,61 +729,57 @@ namespace MS.DbgShell
             }
         }
 
+        #endregion
 
-#endregion
-
-#region Input
-
-
+        #region Input
 
         /// <summary>
-        ///
-        /// Reads input from the console device according to the mode in effect (see GetMode, SetMode) 
-        /// 
+        /// Reads input from the console device according to the mode in effect (see GetMode, SetMode)
         /// </summary>
         /// <param name="consoleHandle"></param>
-        /// 
         /// Handle to the console device returned by GetInputHandle
-        /// 
-        /// <param name="initialContent">
-        /// 
-        /// Initial contents of the edit buffer, if any. charactersToRead should be at least as large as the length of this string.
-        /// 
+        /// <param name="initialContentLength">
+        /// Length of initial content of the edit buffer. Zero if no initial content exists.
+        /// Must be less than editBuffer length.
+        /// </param>
+        /// <param name="editBuffer">
+        /// Edit buffer with optional initial content.
+        /// Caution! Last position in the edit buffer is for a null in native code.
         /// </param>
         /// <param name="charactersToRead">
-        /// 
         /// Number of characters to read from the device.
-        /// 
+        /// Must be less than editBuffer length.
         /// </param>
         /// <param name="endOnTab">
-        /// 
-        /// true to allow the user to terminate input by hitting the tab or shift-tab key, in addition to the enter key
-        /// 
+        /// True to allow the user to terminate input by hitting the tab or shift-tab key, in addition to the enter key
         /// </param>
         /// <param name="keyState">
-        /// 
-        /// bit mask indicating the state of the control/shift keys at the point input was terminated.
-        /// 
+        /// Bit mask indicating the state of the control/shift keys at the point input was terminated.
+        /// </param>
         /// </param>
         /// <returns></returns>
         /// <exception cref="HostException">
-        /// 
         /// If Win32's ReadConsole fails
-        /// 
         /// </exception>
 
-        internal static string ReadConsole(ConsoleHandle consoleHandle, string initialContent,
-            int charactersToRead, bool endOnTab, out uint keyState)
+        internal static string ReadConsole(
+            ConsoleHandle consoleHandle,
+            int initialContentLength,
+            Span<char> editBuffer,
+            int charactersToRead,
+            bool endOnTab,
+            out uint keyState)
         {
             Util.Assert(!consoleHandle.IsInvalid, "ConsoleHandle is not valid");
             Util.Assert(!consoleHandle.IsClosed, "ConsoleHandle is closed");
-            Util.Assert(initialContent != null, "if no initial content is desired, pass String.Empty");
+            Util.Assert(initialContentLength < editBuffer.Length, "initialContentLength must be less than editBuffer.Length");
+            Util.Assert(charactersToRead < editBuffer.Length, "charactersToRead must be less than editBuffer.Length");
             keyState = 0;
 
             CONSOLE_READCONSOLE_CONTROL control = new CONSOLE_READCONSOLE_CONTROL();
 
             control.nLength = (ULONG)Marshal.SizeOf(control);
-            control.nInitialChars = (ULONG)initialContent.Length;
+            control.nInitialChars = (ULONG)initialContentLength;
             control.dwControlKeyState = 0;
             if (endOnTab)
             {
@@ -810,27 +788,34 @@ namespace MS.DbgShell
                 control.dwCtrlWakeupMask = (1 << TAB);
             }
 
-            DWORD charsReadUnused = 0;
-            StringBuilder buffer = new StringBuilder(initialContent, charactersToRead);
+            DWORD charsReaded = 0;
+
             bool result =
                 NativeMethods.ReadConsole(
                     consoleHandle.DangerousGetHandle(),
-                    buffer,
+                    editBuffer,
                     (DWORD)charactersToRead,
-                    out charsReadUnused,
+                    out charsReaded,
                     ref control);
             keyState = control.dwControlKeyState;
             if (result == false)
             {
                 int err = Marshal.GetLastWin32Error();
 
-                HostException e = CreateHostException(err, "ReadConsole",
-                    ErrorCategory.ReadError, "The Win32 internal error \"{0}\" 0x{1:X} occurred while reading characters from the console input buffer. Contact Microsoft Customer Support Services." ); //ConsoleControlStrings.ReadConsoleExceptionTemplate);
+                HostException e = CreateHostException(
+                    err,
+                    "ReadConsole",
+                    ErrorCategory.ReadError,
+                    "The Win32 internal error \"{0}\" 0x{1:X} occurred while reading characters from the console input buffer. Contact Microsoft Customer Support Services." ); //ConsoleControlStrings.ReadConsoleExceptionTemplate);
                 throw e;
             }
-            if (charsReadUnused > (uint)buffer.Length)
-                charsReadUnused = (uint)buffer.Length;
-            return buffer.ToString(0, (int)charsReadUnused);
+
+            if (charsReaded > (uint)charactersToRead)
+            {
+                charsReaded = (uint)charactersToRead;
+            }
+
+            return editBuffer.Slice(0, (int)charsReaded).ToString();
         }
 
         /// <summary>
@@ -838,19 +823,13 @@ namespace MS.DbgShell
         /// Returns the number of records read in buffer.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console where input is read
-        /// 
         /// </param>
         /// <param name="buffer">
-        /// 
         /// array where data read are stored
-        /// 
         /// </param>
         /// <returns>
-        /// 
         /// actual number of input records read
-        /// 
         /// </returns>
         /// <exception cref="HostException">
         /// If Win32's ReadConsoleInput fails
@@ -876,26 +855,21 @@ namespace MS.DbgShell
                     ErrorCategory.ReadError, "The Win32 internal error \"{0}\" 0x{1:X} occurred while reading input records from the console input buffer. Contact Microsoft Customer Support Services." ); //ConsoleControlStrings.ReadConsoleInputExceptionTemplate);
                 throw e;
             }
+
             return (int)recordsRead;
         }
 
         /// <summary>
-        /// Wraps Win32 PeekConsoleInput
+        /// Wraps Win32 PeekConsoleInput.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console where input is peeked
-        /// 
         /// </param>
         /// <param name="buffer">
-        /// 
         /// array where data read are stored
-        /// 
         /// </param>
         /// <returns>
-        /// 
         /// actual number of input records peeked
-        /// 
         /// </returns>
         /// <exception cref="HostException">
         /// If Win32's PeekConsoleInput fails
@@ -931,17 +905,13 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// Wraps Win32 GetNumberOfConsoleInputEvents
+        /// Wraps Win32 GetNumberOfConsoleInputEvents.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console where the number of console input events is obtained
-        /// 
         /// </param>
         /// <returns>
-        /// 
         /// number of console input events
-        /// 
         /// </returns>
         /// <exception cref="HostException">
         /// If Win32's GetNumberOfConsoleInputEvents fails
@@ -968,12 +938,10 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// Wraps Win32 FlushConsoleInputBuffer
+        /// Wraps Win32 FlushConsoleInputBuffer.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console where the input buffer is flushed
-        /// 
         /// </param>
         /// <exception cref="HostException">
         /// If Win32's FlushConsoleInputBuffer fails
@@ -983,7 +951,9 @@ namespace MS.DbgShell
             Util.Assert(!consoleHandle.IsInvalid, "ConsoleHandle is not valid");
             Util.Assert(!consoleHandle.IsClosed, "ConsoleHandle is closed");
 
-            bool result = NativeMethods.FlushConsoleInputBuffer(consoleHandle.DangerousGetHandle());
+            bool result = false;
+            NakedWin32Handle h = consoleHandle.DangerousGetHandle();
+            result = NativeMethods.FlushConsoleInputBuffer(h);
 
             if (result == false)
             {
@@ -995,23 +965,19 @@ namespace MS.DbgShell
             }
         }
 
-#endregion Input
+        #endregion Input
 
-#region Buffer
+        #region Buffer
 
         /// <summary>
         /// Wraps Win32 GetConsoleScreenBufferInfo
-        /// Returns Console Screen Buffer Info
+        /// Returns Console Screen Buffer Info.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// Handle for the console where the screen buffer info is obtained
-        /// 
         /// </param>
         /// <returns>
-        /// 
         /// info about the screen buffer. See the definition of CONSOLE_SCREEN_BUFFER_INFO
-        /// 
         /// </returns>
         /// <exception cref="HostException">
         /// If Win32's GetConsoleScreenBufferInfo fails
@@ -1037,7 +1003,7 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// set the output buffer's size
+        /// Set the output buffer's size.
         /// </summary>
         /// <param name="consoleHandle"></param>
         /// <param name="newSize"></param>
@@ -1089,6 +1055,7 @@ namespace MS.DbgShell
                 case ConsoleColor.Yellow:
                     return true;
             }
+
             return false;
         }
 
@@ -1114,19 +1081,13 @@ namespace MS.DbgShell
         /// is constrained.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console where output is written
-        /// 
         /// </param>
         /// <param name="origin">
-        /// 
         /// location on screen buffer where writing starts
-        /// 
         /// </param>
         /// <param name="contents">
-        /// 
         /// 2D array of cells. Caller needs to ensure that the array is 2D.
-        /// 
         /// </param>
         /// <exception cref="HostException">
         /// If Win32's GetConsoleScreenBufferInfo fails
@@ -1136,7 +1097,7 @@ namespace MS.DbgShell
         /// If <paramref name="contents"/> is null
         /// </exception>
         /// <exception cref="ArgumentException">
-        /// If it is illegal to write <paramref name="contents"/> to the output buffer 
+        /// If it is illegal to write <paramref name="contents"/> to the output buffer
         /// </exception>
 
         internal static void WriteConsoleOutput(ConsoleHandle consoleHandle, Coordinates origin, BufferCell[,] contents)
@@ -1147,6 +1108,7 @@ namespace MS.DbgShell
             {
                 throw new ArgumentNullException( "contents" );
             }
+
             uint codePage;
             if (IsCJKOutputCodePage(out codePage))
             {
@@ -1171,11 +1133,11 @@ namespace MS.DbgShell
                     screenRegion.Bottom - screenRegion.Top;
 
 #if DEBUG
-                //Check contents in contentsRegion
+                // Check contents in contentsRegion
                 CheckWriteConsoleOutputContents(contents, contentsRegion);
 #endif
 
-                //Identify edges and areas of identical contiguous edges in contentsRegion
+                // Identify edges and areas of identical contiguous edges in contentsRegion
                 List<BufferCellArrayRowTypeRange> sameEdgeAreas = new List<BufferCellArrayRowTypeRange>();
                 int firstLeftTrailingRow = -1, firstRightLeadingRow = -1;
                 BuildEdgeTypeInfo(contentsRegion, contents,
@@ -1232,11 +1194,13 @@ namespace MS.DbgShell
                 {
                     firstLeftTrailingRow = r;
                 }
+
                 if (firstRightLeadingRow == -1 && ((range.Type & BufferCellArrayRowType.RightLeading) != 0))
                 {
                     firstRightLeadingRow = r;
                 }
-                for (;;)
+
+                while (true)
                 {
                     r++;
                     if (r > contentsRegion.Bottom)
@@ -1245,6 +1209,7 @@ namespace MS.DbgShell
                         sameEdgeAreas.Add(range);
                         return;
                     }
+
                     edgeType = GetEdgeType(contents[r, contentsRegion.Left], contents[r, contentsRegion.Right]);
                     if (edgeType != range.Type)
                     {
@@ -1263,10 +1228,12 @@ namespace MS.DbgShell
             {
                 edgeType |= BufferCellArrayRowType.LeftTrailing;
             }
+
             if (right.BufferCellType == BufferCellType.Leading)
             {
                 edgeType |= BufferCellArrayRowType.RightLeading;
             }
+
             return edgeType;
         }
 
@@ -1285,11 +1252,11 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// Check the existing screen columns left and right of areas to be written
+        /// Check the existing screen columns left and right of areas to be written.
         /// </summary>
         /// <param name="consoleHandle"></param>
         /// <param name="codePage"></param>
-        /// <param name="origin">must be within the screen buffer</param>
+        /// <param name="origin">Must be within the screen buffer.</param>
         /// <param name="contents"></param>
         /// <param name="contentsRegion"></param>
         /// <param name="bufferInfo"></param>
@@ -1336,7 +1303,7 @@ namespace MS.DbgShell
                     }
                 }
             }
-            //Check right edge
+            // Check right edge
             if (origin.X + (contentsRegion.Right - contentsRegion.Left) + 1 >= bufferInfo.BufferSize.X)
             {
                 if (firstRightLeadingRow >= 0)
@@ -1388,9 +1355,10 @@ namespace MS.DbgShell
                         {
                             break;
                         }
+
                         if (contents[r, c].Character != 0 || contents[r, c].BufferCellType != BufferCellType.Trailing)
                         {
-                            // for a 2 cell character, either there is no trailing BufferCell or 
+                            // for a 2 cell character, either there is no trailing BufferCell or
                             // the trailing BufferCell's character is not 0
                             throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, "contents[{0}, {1}]", r, c));
                         }
@@ -1468,6 +1436,7 @@ namespace MS.DbgShell
                         bufferSize.X--;
                         writeRegion.Right--;
                     }
+
                     CHAR_INFO[] characterBuffer = new CHAR_INFO[bufferSize.Y * bufferSize.X];
 
                     // copy characterBuffer to contents;
@@ -1500,10 +1469,10 @@ namespace MS.DbgShell
                             }
                             else if (contents[r, c].BufferCellType == BufferCellType.Trailing)
                             {
-                                // The FontFamily is a 8-bit integer. The low-order bit (bit 0) specifies the pitch of the font. 
-                                // If it is 1, the font is variable pitch (or proportional). If it is 0, the font is fixed pitch 
-                                // (or monospace). Bits 1 and 2 specify the font type. If both bits are 0, the font is a raster font; 
-                                // if bit 1 is 1 and bit 2 is 0, the font is a vector font; if bit 1 is 0 and bit 2 is set, or if both 
+                                // The FontFamily is a 8-bit integer. The low-order bit (bit 0) specifies the pitch of the font.
+                                // If it is 1, the font is variable pitch (or proportional). If it is 0, the font is fixed pitch
+                                // (or monospace). Bits 1 and 2 specify the font type. If both bits are 0, the font is a raster font;
+                                // if bit 1 is 1 and bit 2 is 0, the font is a vector font; if bit 1 is 0 and bit 2 is set, or if both
                                 // bits are 1, the font is true type. Bit 3 is 1 if the font is a device font; otherwise, it is 0.
                                 // We only care about the bit 1 and 2, which indicate the font type.
                                 // There are only two font type defined for the Console, at
@@ -1527,6 +1496,7 @@ namespace MS.DbgShell
                                     // We don't output anything for this cell if Raster font is in use, or if the last cell is not a leading byte
                                     characterBufferIndex--;
                                 }
+
                                 lastCharIsLeading = false;
                             }
                         }
@@ -1564,6 +1534,7 @@ namespace MS.DbgShell
                             bufferCoord,
                             ref writeRegion);
                     }
+
                     if (result == false)
                     {
                         // When WriteConsoleOutput fails, half bufferLimit
@@ -1574,6 +1545,7 @@ namespace MS.DbgShell
                                 ErrorCategory.WriteError, "The Win32 internal error \"{0}\" 0x{1:X} occurred while writing to the console output buffer. Contact Microsoft Customer Support Services." ); //ConsoleControlStrings.WriteConsoleOutputExceptionTemplate);
                             throw e;
                         }
+
                         bufferLimit /= 2;
                         if (cols == colsRemaining)
                         {
@@ -1614,6 +1586,7 @@ namespace MS.DbgShell
                 //tracer.WriteLine("contents passed in has 0 rows and columns");
                 return;
             }
+
             int bufferLimit = 2 * 1024; // Limit is 8K bytes as each CHAR_INFO takes 4 bytes
 
             COORD bufferCoord;
@@ -1700,6 +1673,7 @@ namespace MS.DbgShell
                                 ErrorCategory.WriteError, "The Win32 internal error \"{0}\" 0x{1:X} occurred while writing to the console output buffer. Contact Microsoft Customer Support Services." ); //ConsoleControlStrings.WriteConsoleOutputExceptionTemplate);
                             throw e;
                         }
+
                         bufferLimit /= 2;
                         if (cols == colsRemaining)
                         {
@@ -1736,25 +1710,17 @@ namespace MS.DbgShell
         /// is constrained.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console where output is read
-        /// 
         /// </param>
         /// <param name="origin">
-        /// 
         /// location on screen buffer where reading begins
-        /// 
         /// </param>
         /// <param name="contentsRegion">
-        /// 
-        /// indicates the area in <paramref name="contents"/> where the data read 
+        /// indicates the area in <paramref name="contents"/> where the data read
         /// is stored.
-        /// 
         /// </param>
         /// <param name="contents">
-        /// 
         /// this is ref because the bounds and size of the array are needed.
-        /// 
         /// </param>
         /// <exception cref="HostException">
         /// If there is not enough memory to complete calls to Win32's ReadConsoleOutput
@@ -1804,6 +1770,7 @@ namespace MS.DbgShell
                     {
                         cellArray = new BufferCell[cellArrayRegion.Bottom + 1, 2];
                     }
+
                     checkOrigin = new Coordinates(origin.X +
                         (contentsRegion.Right - contentsRegion.Left), origin.Y);
                     ReadConsoleOutputCJK(consoleHandle, codePage, checkOrigin,
@@ -1823,10 +1790,10 @@ namespace MS.DbgShell
             }
         }
 
-#region ReadConsoleOutput CJK
+        #region ReadConsoleOutput CJK
         /// <summary>
         /// If an edge cell read is a blank, it is potentially part of a double width character. Hence,
-        ///  at least one of the left and right edges should be checked
+        ///  at least one of the left and right edges should be checked.
         /// </summary>
         /// <param name="edge"></param>
         /// <param name="contents"></param>
@@ -1841,6 +1808,7 @@ namespace MS.DbgShell
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -1878,6 +1846,7 @@ namespace MS.DbgShell
             {
                 return false;
             }
+
             int characterBufferIndex = 0;
 
             for (int r = contentsRegion.Top; r <= contentsRegion.Bottom; r++)
@@ -1893,8 +1862,8 @@ namespace MS.DbgShell
                     contents[r, c].ForegroundColor = fgColor;
                     contents[r, c].BackgroundColor = bgColor;
 
-                    // Set the attributes of the buffercells to be the same as that of the 
-                    // incoming CHAR_INFO. In case where the CHAR_INFO character is a 
+                    // Set the attributes of the buffercells to be the same as that of the
+                    // incoming CHAR_INFO. In case where the CHAR_INFO character is a
                     // trailing byte set the Character of BufferCell to 0. This is done
                     // because at a lot of places this check is being done. Having a trailing
                     // character to be 0 is by design.
@@ -1931,11 +1900,12 @@ namespace MS.DbgShell
                     }
                 }
             }
+
             return true;
         }
 
         /// <summary>
-        /// Can handle reading CJK characters, but the left and right edges are not checked
+        /// Can handle reading CJK characters, but the left and right edges are not checked.
         /// </summary>
         /// <param name="consoleHandle"></param>
         /// <param name="codePage"></param>
@@ -2055,6 +2025,7 @@ namespace MS.DbgShell
                             }
                         }
                     }
+
                     colsRemaining -= bufferSize.X;
                     readRegion.Left += bufferSize.X;
                     if (colsRemaining > 0 && (bufferSize.Y == 1) &&
@@ -2063,13 +2034,13 @@ namespace MS.DbgShell
                         colsRemaining++;
                         readRegion.Left--;
                     }
+
                     bufferSize.X = (short)Math.Min(colsRemaining, bufferLimit);
                 }  // column iteration
 
                 rowsRemaining -= bufferSize.Y;
                 readRegion.Top += bufferSize.Y;
             }  // row iteration
-
 
             // The following nested loop set the value of the empty cells in contents:
             // character to ' '
@@ -2107,15 +2078,16 @@ namespace MS.DbgShell
                     {
                         break;
                     }
+
                     contents[rowIndex, colIndex] = new BufferCell(
                         ' ', foreground, background, BufferCellType.Complete);
                     colIndex++;
                 }
+
                 rowIndex++;
             }
         }
-#endregion ReadConsoleOutput CJK
-
+        #endregion ReadConsoleOutput CJK
 
         private static void ReadConsoleOutputPlain
         (
@@ -2242,6 +2214,7 @@ namespace MS.DbgShell
                             contents[r, c].BackgroundColor = bgColor;
                         }
                     }
+
                     colsRemaining -= bufferSize.X;
                     readRegion.Left += bufferSize.X;
                     bufferSize.X = (short)Math.Min(colsRemaining, bufferLimit);
@@ -2287,38 +2260,31 @@ namespace MS.DbgShell
                     {
                         break;
                     }
+
                     contents[rowIndex, colIndex].Character = ' ';
                     contents[rowIndex, colIndex].ForegroundColor = foreground;
                     contents[rowIndex, colIndex].BackgroundColor = background;
                     colIndex++;
                 }
+
                 rowIndex++;
             }
         }
 
-
         /// <summary>
-        /// Wraps Win32 FillConsoleOutputCharacter
+        /// Wraps Win32 FillConsoleOutputCharacter.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console where output is filled
-        /// 
         /// </param>
         /// <param name="character">
-        /// 
         /// character to fill the console output
-        /// 
         /// </param>
         /// <param name="numberToWrite">
-        /// 
         /// number of times to write character
-        /// 
         /// </param>
         /// <param name="origin">
-        /// 
         /// location on screen buffer where writing starts
-        /// 
         /// </param>
         /// <exception cref="HostException">
         /// If Win32's FillConsoleOutputCharacter fails
@@ -2360,27 +2326,19 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// Wraps Win32 FillConsoleOutputAttribute
+        /// Wraps Win32 FillConsoleOutputAttribute.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console where output is filled
-        /// 
         /// </param>
         /// <param name="attribute">
-        /// 
         /// attribute to fill the console output
-        /// 
         /// </param>
         /// <param name="numberToWrite">
-        /// 
         /// number of times to write attribute
-        /// 
         /// </param>
         /// <param name="origin">
-        /// 
         /// location on screen buffer where writing starts
-        /// 
         /// </param>
         /// <exception cref="HostException">
         /// If Win32's FillConsoleOutputAttribute fails
@@ -2421,32 +2379,22 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// Wrap Win32 ScrollConsoleScreenBuffer
+        /// Wrap Win32 ScrollConsoleScreenBuffer.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console where screen buffer is scrolled
-        /// 
         /// </param>
         /// <param name="scrollRectangle">
-        /// 
         /// area to be scrolled
-        /// 
         /// </param>
         /// <param name="clipRectangle">
-        /// 
         /// area to be updated after scrolling
-        /// 
         /// </param>
         /// <param name="destOrigin">
-        /// 
         /// location to which the top left corner of scrollRectangle move
-        /// 
         /// </param>
         /// <param name="fill">
-        /// 
         /// character and attribute to fill the area vacated by the scroll
-        /// 
         /// </param>
         /// <exception cref="HostException">
         /// If Win32's ScrollConsoleScreenBuffer fails
@@ -2481,29 +2429,23 @@ namespace MS.DbgShell
             }
         }
 
-#endregion Buffer
+        #endregion Buffer
 
-#region Window
+        #region Window
 
         /// <summary>
-        /// Wraps Win32 SetConsoleWindowInfo
+        /// Wraps Win32 SetConsoleWindowInfo.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console where window info is set
-        /// 
         /// </param>
         /// <param name="absolute">
-        /// 
         /// If this parameter is TRUE, the coordinates specify the new upper-left and
         /// lower-right corners of the window. If it is false, the coordinates are offsets
         /// to the current window-corner coordinates
-        /// 
         /// </param>
         /// <param name="windowInfo">
-        /// 
         /// specify the size and position of the console screen buffer's window
-        /// 
         /// </param>
         /// <exception cref="HostException">
         /// If Win32's SetConsoleWindowInfo fails
@@ -2527,17 +2469,13 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// Wraps Win32 GetLargestConsoleWindowSize
+        /// Wraps Win32 GetLargestConsoleWindowSize.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console for which the largest window size is obtained
-        /// 
         /// </param>
         /// <returns>
-        /// 
         /// the largest window size
-        /// 
         /// </returns>
         /// <exception cref="HostException">
         /// If Win32's GetLargestConsoleWindowSize fails
@@ -2562,16 +2500,12 @@ namespace MS.DbgShell
             return new Size(result.X, result.Y);
         }
 
-
-
         /// <summary>
         /// Wraps Win32 GetConsoleTitle. 1K is the safe limit experimentally. The 64K limit
         /// found in the docs is disregarded because it is essentially meaningless.
         /// </summary>
         /// <returns>
-        /// 
         /// a string for the title of the window
-        /// 
         /// </returns>
         /// <exception cref="HostException">
         /// If Win32's GetConsoleTitle fails
@@ -2600,12 +2534,10 @@ namespace MS.DbgShell
         }
 
         /// <summary>
-        /// Wraps Win32 SetConsoleTitle
+        /// Wraps Win32 SetConsoleTitle.
         /// </summary>
         /// <param name="consoleTitle">
-        /// 
         /// a string for the title of the window
-        /// 
         /// </param>
         /// <exception cref="HostException">
         /// If Win32's SetConsoleTitle fails
@@ -2625,158 +2557,71 @@ namespace MS.DbgShell
             }
         }
 
-#endregion Window
-
-#region Font Selection
+        #endregion Window
 
         /// <summary>
-        /// UpdateLocaleSpecificFont is a helper method used to update 
-        /// the console font based on the locale.
-        /// The default font face used for Powershell Console is Lucida Console.
-        /// However certain locales dont support Lucida Console font. Hence for such
-        /// locales the console font is updated to Raster dynamically.
-        /// </summary>
-        internal static void UpdateLocaleSpecificFont()
-        {
-            // Default Powershell shortcut.lnk settings. 
-            const string defaultFontFace = "Lucida Console";
-
-            // Default CJK locale shortcut.lnk settings.
-            // Font size is hard coded here to ensure we select a supported size.
-            // GDI does a poor job of selecting raster font size if the requested 
-            // size is not supported.
-            const string CJKFontFace = "Terminal";
-            const int CJKFontFamily = 48;
-            const int CJKnFont = 6;
-            const int CJKFontWidth = 8;
-            const int CJKFontHeight = 12;
-            const int CKJFontWeight = 400;
-
-            uint currentLocaleCodePage = (uint)ConsoleControl.NativeMethods.GetConsoleCP();
-
-            ConsoleHandle handle = ConsoleControl.GetActiveScreenBufferHandle();
-            CONSOLE_FONT_INFO_EX fontInfo;
-            try
-            {
-                fontInfo = ConsoleControl.GetConsoleFontInfo(handle);
-            }
-            catch (Exception)
-            {
-                return;
-            }
-
-            bool isLucidaConsoleSupportedLocale = CodePageSupportsLucida(currentLocaleCodePage);
-
-            // The Raster font is updated for Japanese and Korean locales if the user has not manually
-            // altered the default settings. If the default settings are altered then the
-            // setting chosen by the user would be used.
-            if (!isLucidaConsoleSupportedLocale &&
-                fontInfo.FontFace.Equals(defaultFontFace, StringComparison.OrdinalIgnoreCase))
-            {
-                fontInfo.FontFace = CJKFontFace;
-                fontInfo.FontFamily = CJKFontFamily;
-                fontInfo.nFont = CJKnFont;
-                fontInfo.FontWidth = CJKFontWidth;
-                fontInfo.FontHeight = CJKFontHeight;
-                fontInfo.FontWeight = CKJFontWeight;
-
-                bool result = NativeMethods.SetCurrentConsoleFontEx(handle.DangerousGetHandle(), false, ref fontInfo);
-
-                if (result == false)
-                {
-                    int err = Marshal.GetLastWin32Error();
-
-                    HostException e = CreateHostException(err,
-                        "SetConsoleFontInfo",
-                        ErrorCategory.ResourceUnavailable,
-                        "The Win32 internal error \"{0}\" 0x{1:X} occurred while setting console font information. Contact Microsoft Customer Support Services."); // ConsoleControlStrings.SetConsoleFontInfoExceptionTemplate
-
-                    throw e;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Supported Lucida code pages obtained from Font group.
-        /// Contacts: alib, judysa, simonda
-        /// </summary>
-        private static HashSet<uint> LucidaSupportedCodePages = new HashSet<uint>()
-        {
-            1251,               // Latin 1
-            1250,               // Latin 2
-            1251,               // Cyrillic
-            1253,               // Greek
-            1254,               // Turkish
-            869,                // IBM Greek
-            866,                // MS-DOS Russian
-            865,                // MS-DOS Nordic
-            863,                // MS-DOS Canadian French
-            861,                // MS-DOS Icelandic
-            860,                // MS-DOS Portuguese
-            857,                // IBM Turkish
-            855,                // IBM Cyrillic
-            852,                // Latin 2
-            737,                // Greek
-            850,                // WE/Latin 1
-            437                 // US
-            //936,                // SimplifiedChinese -  According to font team this is *not* supported.
-            //950                 // TraditionalChinese - According to font team this is *not* supported.
-        };
-        private static bool CodePageSupportsLucida(uint currentLocaleCodePage)
-        {
-            return LucidaSupportedCodePages.Contains(currentLocaleCodePage);
-        }
-
-#endregion
-
-        /// <summary>
-        /// 
-        /// Wrap Win32 WriteConsole
-        /// 
+        /// Wrap Win32 WriteConsole.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
-        /// handle for the console where the string is written
-        /// 
+        /// Handle for the console where the string is written.
         /// </param>
         /// <param name="output">
-        /// 
-        /// string that is written
-        /// 
+        /// String that is written.
+        /// </param>
+        /// <param name="newLine">
+        /// New line is written.
         /// </param>
         /// <exception cref="HostException">
-        /// 
-        /// if the Win32's WriteConsole fails 
-        /// 
+        /// If the Win32's WriteConsole fails.
         /// </exception>
-
-        internal static void WriteConsole(ConsoleHandle consoleHandle, string output)
+        internal static void WriteConsole(ConsoleHandle consoleHandle, ReadOnlySpan<char> output, bool newLine)
         {
             Util.Assert(!consoleHandle.IsInvalid, "ConsoleHandle is not valid");
             Util.Assert(!consoleHandle.IsClosed, "ConsoleHandle is closed");
 
-            if (String.IsNullOrEmpty(output))
+            if (output.Length == 0)
+            {
+                if (newLine)
+                {
+                    _RealWriteConsole(consoleHandle, Environment.NewLine);
+                }
+
                 return;
+            }
 
-            // Native WriteConsole doesn't support output buffer longer than 64K. 
-            // We need to chop the output string if it is too long. 
-
+            // Native WriteConsole doesn't support output buffer longer than 64K.
+            // We need to chop the output string if it is too long.
             int cursor = 0; // This records the chopping position in output string
-            const int maxBufferSize = 16383; // this is 64K/4 - 1 to account for possible width of each character.
+            const int MaxBufferSize = 16383; // this is 64K/4 - 1 to account for possible width of each character.
 
             while (cursor < output.Length)
             {
-                string outBuffer;
+                ReadOnlySpan<char> outBuffer;
 
-                if (cursor + maxBufferSize < output.Length)
+                if (cursor + MaxBufferSize < output.Length)
                 {
-                    outBuffer = output.Substring(cursor, maxBufferSize);
-                    cursor += maxBufferSize;
+                    outBuffer = output.Slice(cursor, MaxBufferSize);
+                    cursor += MaxBufferSize;
                 }
                 else
                 {
-                    outBuffer = output.Substring(cursor);
+                    outBuffer = output.Slice(cursor);
                     cursor = output.Length;
+
+                 // if (newLine)
+                 // {
+                 //     var endOfLine = Environment.NewLine.AsSpan();
+                 //     var endOfLineLength = endOfLine.Length;
+                 //     Span<char> outBufferLine = stackalloc char[outBuffer.Length + endOfLineLength];
+                 //     outBuffer.CopyTo(outBufferLine);
+                 //     endOfLine.CopyTo(outBufferLine.Slice(outBufferLine.Length - endOfLineLength));
+                 //     //WriteConsole(consoleHandle, outBufferLine);
+                 //     outBuffer = outBufferLine;
+                 // }
+                 // else
+                 // {
+                 //     //WriteConsole(consoleHandle, outBuffer);
+                 // }
                 }
 
                 //_RealWriteConsole( consoleHandle, outBuffer );
@@ -2792,10 +2637,10 @@ namespace MS.DbgShell
                 }
                 else
                 {
-                    sm_colorWriter.Write( consoleHandle, outBuffer );
+                    sm_colorWriter.Write( consoleHandle, outBuffer, newLine );
                 }
             }
-        } // end WriteConsole()
+        }
 
         // A problem with doing this at such an incredibly low level is that if there is any
         // kind of problem with it, and then we try to WriteErrorLine... and hilarity ensues.
@@ -2803,42 +2648,41 @@ namespace MS.DbgShell
         // reset the colors and parse state.
         private static AnsiColorWriter sm_colorWriter = new AnsiColorWriter();
 
-        private static void _RealWriteConsole( ConsoleHandle handle, string s )
+        private static void _RealWriteConsole(ConsoleHandle consoleHandle, ReadOnlySpan<char> buffer)
         {
             DWORD charsWritten;
-            bool itWorked = NativeMethods.WriteConsole( handle.DangerousGetHandle(),
-                                                        s,
-                                                        (DWORD) s.Length,
-                                                        out charsWritten,
-                                                        IntPtr.Zero );
-            if( !itWorked )
+            bool result =
+                NativeMethods.WriteConsole(
+                    consoleHandle.DangerousGetHandle(),
+                    buffer,
+                    (DWORD)buffer.Length,
+                    out charsWritten,
+                    IntPtr.Zero);
+
+            if (result == false)
             {
                 int err = Marshal.GetLastWin32Error();
 
-                HostException e = CreateHostException(err, "WriteConsole",
-                    ErrorCategory.WriteError, "The Win32 internal error \"{0}\" 0x{1:X} occurred while writing to the console output buffer at the current cursor position. Contact Microsoft Customer Support Services." ); //ConsoleControlStrings.WriteConsoleExceptionTemplate);
+                HostException e = CreateHostException(
+                    err,
+                    "WriteConsole",
+                    ErrorCategory.WriteError,
+                    "The Win32 internal error \"{0}\" 0x{1:X} occurred while writing to the console output buffer at the current cursor position. Contact Microsoft Customer Support Services." ); //ConsoleControlStrings.WriteConsoleExceptionTemplate);
                 throw e;
             }
         } // end _RealWriteConsole()
 
-
         /// <summary>
-        /// Wraps Win32 SetConsoleTextAttribute
+        /// Wraps Win32 SetConsoleTextAttribute.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console where text attribute is set
-        /// 
         /// </param>
         /// <param name="attribute">
-        /// 
         /// text attribute to set the console
-        /// 
         /// </param>
         /// <exception cref="HostException">
-        /// 
-        /// if the Win32's SetConsoleTextAttribute fails 
-        /// 
+        /// if the Win32's SetConsoleTextAttribute fails
         /// </exception>
 
         internal static void SetConsoleTextAttribute(ConsoleHandle consoleHandle, WORD attribute)
@@ -2858,347 +2702,161 @@ namespace MS.DbgShell
             }
         }
 
-
-#region Dealing with CJK
-
-        /// <summary>
-        /// From IsConsoleFullWidth in \windows\core\ntcon\server\dbcs.c
-        /// Gets the CharSet for a code page
-        /// </summary>
-        /// <param name="codePage"></param>
-        /// <returns>The CharSet corresponding to the codePage; defaults to OEM_CHARSET (255)</returns>
-        private static uint CodePageToCharSet(uint codePage)
-        {
-            CHARSETINFO csi;
-            const DWORD TCI_SRCCODEPAGE = 2;
-            const uint OEM_CHARSET = 255;
-            // Suppress the PreFAST warning about not using Marshal.GetLastWin32Error() to
-            // get the error code.
-#pragma warning disable 56523
-            if (!NativeMethods.TranslateCharsetInfo((IntPtr)codePage, out csi, TCI_SRCCODEPAGE))
-            {
-                csi.ciCharset = OEM_CHARSET;
-            }
-            return csi.ciCharset;
-        }
-
-        // From \windows\core\ntcon\server\dbcs.c
-        private static bool IsAvailableFarEastCodePage(uint codePage)
-        {
-            uint charSet = CodePageToCharSet(codePage);
-            return IsAnyDBCSCharSet(charSet);
-        }
-
-        // From \windows\core\ntcon\server\dbcs.c
-        private static bool IsAnyDBCSCharSet(uint charSet)
-        {
-            const uint SHIFTJIS_CHARSET = 128;
-            const uint HANGUL_CHARSET = 129;
-            const uint CHINESEBIG5_CHARSET = 136;
-            const uint GB2312_CHARSET = 134;
-            return charSet == SHIFTJIS_CHARSET || charSet == HANGUL_CHARSET ||
-                charSet == CHINESEBIG5_CHARSET || charSet == GB2312_CHARSET;
-        }
-
-        /// <summary>
-        /// From IsConsoleFullWidth in \windows\core\ntcon\server\dbcs.c
-        /// Precondition: the current code page needs to be a Far East code page.
-        /// 
-        /// char F8F8 makes this function return 1 while in CHT, CHS, and KOR it takes 2 cells.
-        /// I don't think we should special-case this because that ought to be a bug outside of
-        /// this code.
-        /// </summary>
-        /// <param name="c"></param>
-        /// <param name="hwnd">window handle</param>
-        /// <param name="hDC">handle to DC; it is not released by this method</param>
-        /// <param name="istmInitialized"></param>
-        /// <param name="tm"></param>
-        /// <returns></returns>
-        private static int LengthInBufferCellsFE(char c, ref HWND hwnd, ref HDC hDC, ref bool istmInitialized, ref TEXTMETRIC tm)
-        {
-            if (0x20 <= c && c <= 0x7e)
-            {
-                /* ASCII */
-                return 1;
-            }
-            else if (0x3041 <= c && c <= 0x3094)
-            {
-                /* Hiragana */
-                return 2;
-            }
-            else if (0x30a1 <= c && c <= 0x30f6)
-            {
-                /* Katakana */
-                return 2;
-            }
-            else if (0x3105 <= c && c <= 0x312c)
-            {
-                /* Bopomofo */
-                return 2;
-            }
-            else if (0x3131 <= c && c <= 0x318e)
-            {
-                /* Hangul Elements */
-                return 2;
-            }
-            else if (0xac00 <= c && c <= 0xd7a3)
-            {
-                /* Korean Hangul Syllables */
-                return 2;
-            }
-            else if (0xff01 <= c && c <= 0xff5e)
-            {
-                /* Fullwidth ASCII variants */
-                return 2;
-            }
-            else if (0xff61 <= c && c <= 0xff9f)
-            {
-                /* Halfwidth Katakana variants */
-                return 1;
-            }
-            else if ((0xffa0 <= c && c <= 0xffbe) ||
-                     (0xffc2 <= c && c <= 0xffc7) ||
-                     (0xffca <= c && c <= 0xffcf) ||
-                     (0xffd2 <= c && c <= 0xffd7) ||
-                     (0xffda <= c && c <= 0xffdc))
-            {
-                /* Halfwidth Hangul variants */
-                return 1;
-            }
-            else if (0xffe0 <= c && c <= 0xffe6)
-            {
-                /* Fullwidth symbol variants */
-                return 2;
-            }
-            else if (0x4e00 <= c && c <= 0x9fa5)
-            {
-                /* Han Ideographic */
-                return 2;
-            }
-            else if (0xf900 <= c && c <= 0xfa2d)
-            {
-                /* Han Compatibility Ideographs */
-                return 2;
-            }
-            else
-            {
-                /* Unknown character: need to use GDI*/
-                if (hDC == (IntPtr)0)
-                {
-                    hwnd = NativeMethods.GetConsoleWindow();
-                    if ((IntPtr)0 == hwnd)
-                    {
-                        int err = Marshal.GetLastWin32Error();
-                        //Don't throw exception so that output can continue
-                        //tracer.TraceError("Win32 Error 0x{0:X} occurred when getting the window handle to the console.",
-                            //err);
-                        return 1;
-                    }
-                    hDC = NativeMethods.GetDC(hwnd);
-                    if ((IntPtr)0 == hDC)
-                    {
-                        int err = Marshal.GetLastWin32Error();
-                        //Don't throw exception so that output can continue
-                        //tracer.TraceError("Win32 Error 0x{0:X} occurred when getting the Device Context of the console window.",
-                            //err);
-                        return 1;
-                    }
-                }
-                bool result = true;
-                if (!istmInitialized)
-                {
-                    result = NativeMethods.GetTextMetrics(hDC, out tm);
-                    if (!result)
-                    {
-                        int err = Marshal.GetLastWin32Error();
-                        //Don't throw exception so that output can continue
-                        //tracer.TraceError("Win32 Error 0x{0:X} occurred when getting the Text Metric of the console window's Device Context.",
-                            //err);
-                        return 1;
-                    }
-                    istmInitialized = true;
-                }
-                int width;
-                result = NativeMethods.GetCharWidth32(hDC, (uint)c, (uint)c, out width);
-                if (!result)
-                {
-                    int err = Marshal.GetLastWin32Error();
-                    //Don't throw exception so that output can continue
-                    //tracer.TraceError("Win32 Error 0x{0:X} occurred when getting the width of a char.",
-                        //err);
-                    return 1;
-                }
-                if (width >= tm.tmMaxCharWidth)
-                {
-                    return 2;
-                }
-            }
-            //tracer.WriteLine("failed to locate char {0}, return 1", (int)c);
-            return 1;
-        }
-
-        internal static int LengthInBufferCells(char c)
-        {
-            uint codePage = NativeMethods.GetConsoleOutputCP();
-            return LengthInBufferCells(c, codePage);
-        }
-
-        /// <summary>
-        /// From IsConsoleFullWidth in \windows\core\ntcon\server\dbcs.c
-        /// </summary>
-        /// <param name="c"></param>
-        /// <param name="codePage"></param>
-        /// <returns></returns>
-        [SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults",
-            MessageId = "Microsoft.PowerShell.ConsoleControl+NativeMethods.ReleaseDC(System.IntPtr,System.IntPtr)")]
-        private static int LengthInBufferCells(char c, uint codePage)
-        {
-            if (!IsAvailableFarEastCodePage(codePage))
-            {
-                return 1;
-            }
-            HWND hwnd = (HWND)0;
-            HDC hDC = (HDC)0;
-            bool istmInitialized = false;
-            TEXTMETRIC tm = new TEXTMETRIC(); ;
-            try
-            {
-                return LengthInBufferCellsFE(c, ref hwnd, ref hDC, ref istmInitialized, ref tm);
-            }
-            finally
-            {
-                if (hwnd != (IntPtr)0 && hDC != (IntPtr)0)
-                {
-                    NativeMethods.ReleaseDC(hwnd, hDC);
-                }
-            }
-        }
-
+        #region Dealing with CJK
 
         // Return the length of a VT100 control sequence character in str starting
         // at the given offset.
         //
-        // This code only handles the most common formatting sequences, which are
-        // all of the pattern:
-        //     ESC '[' digits+ (';' digits)* 'm'
-        // 
-        // There are many other VT100 escape sequences, but this simple pattern
-        // is sufficient for our formatting system.  We won't handle cursor movements
-        // or other attempts at animation.
+        // This code only handles the following formatting sequences, corresponding to
+        // the patterns:
+        //     CSI params? 'm'               // SGR: Select Graphics Rendition
+        //     CSI params? '#' [{}pq]        // XTPUSHSGR ('{'), XTPOPSGR ('}'), or their aliases ('p' and 'q')
         //
-        // Note that offset is adjusted past the escape sequence.
+        // Where:
+        //     params: digit+ (';' params)?
+        //     CSI:     C0_CSI | C1_CSI
+        //     C0_CSI:  \x001b '['            // ESC '['
+        //     C1_CSI:  \x009b
+        //
+        // There are many other VT100 escape sequences, but these text attribute sequences
+        // (color-related, underline, etc.) are sufficient for our formatting system.  We
+        // won't handle cursor movements or other attempts at animation.
+        //
+        // Note that offset is adjusted past the escape sequence, or at least one
+        // character forward if there is no escape sequence at the specified position.
         internal static int ControlSequenceLength(string str, ref int offset)
         {
             var start = offset;
-            if (str[offset++] != (char)0x1B)
-                return 0;
 
-            if (offset >= str.Length || str[offset] != '[')
-                return 0;
-
-            offset += 1;
-            while (offset < str.Length)
+            // First, check for the CSI:
+            if ((str[offset] == (char)0x1b) && (str.Length > (offset + 1)) && (str[offset + 1] == '['))
             {
-                var c = str[offset++];
-                if (c == 'm')
-                    break;
-
-                if (char.IsDigit(c) || c == ';')
-                    continue;
-
+                // C0 CSI
+                offset += 2;
+            }
+            else if (str[offset] == (char)0x9b)
+            {
+                // C1 CSI
+                offset += 1;
+            }
+            else
+            {
+                // No CSI at the current location, so we are done looking, but we still
+                // need to advance offset.
+                offset += 1;
                 return 0;
             }
 
-            return offset - start;
+            if (offset >= str.Length)
+            {
+                return 0;
+            }
+
+            // Next, handle possible numeric arguments:
+            char c;
+            do
+            {
+                c = str[offset++];
+            }
+            while ((offset < str.Length) && (char.IsDigit(c) || c == ';'));
+
+            // Finally, handle the command characters for the specific sequences we
+            // handle:
+            if (c == 'm')
+            {
+                // SGR: Select Graphics Rendition
+                return offset - start;
+            }
+
+            // Maybe XTPUSHSGR or XTPOPSGR, but we need to read another char. Offset is
+            // already positioned on the next char (or past the end).
+            if (offset >= str.Length)
+            {
+                return 0;
+            }
+
+            if (c == '#')
+            {
+                // '{' : XTPUSHSGR
+                // '}' : XTPOPSGR
+                // 'p' : alias for XTPUSHSGR
+                // 'q' : alias for XTPOPSGR
+                c = str[offset++];
+                if ((c == '{') ||
+                    (c == '}') ||
+                    (c == 'p') ||
+                    (c == 'q'))
+                {
+                    return offset - start;
+                }
+            }
+
+            return 0;
         }
 
-        // TODO: pick up VT100-related changes from PowerShell
         /// <summary>
-        /// From IsConsoleFullWidth in \windows\core\ntcon\server\dbcs.c
+        /// From IsConsoleFullWidth in \windows\core\ntcon\server\dbcs.c.
         /// </summary>
         /// <returns></returns>
         [SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults",
             MessageId = "Microsoft.PowerShell.ConsoleControl+NativeMethods.ReleaseDC(System.IntPtr,System.IntPtr)")]
-        internal static int LengthInBufferCells(string str, int offset)
+        internal static int LengthInBufferCells(string str, int offset, bool checkEscapeSequences)
         {
-            // [danthom]
-            // We have a problem here. The problem is that 'str' might have color sequences in it,
-            // which mess up length calculations. A partial mitigation is to strip out the color
-            // sequences here when measuring the length. But that doesn't fix all the problems--even
-            // though we will then get an accurate result from LengthInBufferCells, the built-in
-            // Out-Default will use that answer to chop a string if it wraps, but the built-in
-            // Out-Default is /not/ color-aware (so it will end up cutting in some spot much earlier
-            // than intended). I'm not aware of any way around this, except to not use the built-in
-            // Out-Default. :( :( :(
-            //
-            // Here is a sample stack of where this gets called (and the answer is subsequently used to chop the string if necessary):
-            //    > DbgShell.exe!MS.DbgShell.ConsoleControl.LengthInBufferCells(string str, int offset) Line 3057   C#
-            //      DbgShell.exe!MS.DbgShell.ColorHostRawUserInterface.LengthInBufferCells(string s, int offset) Line 1306 + 0xe bytes  C#
-            //      DbgShell.exe!MS.DbgShell.ColorHostRawUserInterface.LengthInBufferCells(string s) Line 1284 + 0x1c bytes C#
-            //      System.Management.Automation.dll!Microsoft.PowerShell.Commands.Internal.Format.DisplayCellsPSHost.Length(string str) + 0x28 bytes
-            //      System.Management.Automation.dll!Microsoft.PowerShell.Commands.Internal.Format.WriteLineHelper.WriteLineInternal(string val, int cols) + 0xa4 bytes
-            //      System.Management.Automation.dll!Microsoft.PowerShell.Commands.Internal.Format.ConsoleLineOutput.WriteLine(string s) + 0x31 bytes
-            //      System.Management.Automation.dll!Microsoft.PowerShell.Commands.Internal.Format.OutCommandInner.ProcessPayload(Microsoft.PowerShell.Commands.Internal.Format.FormatEntryData fed, Microsoft.PowerShell.Commands.Internal.Format.FormatMessagesContextManager.OutputContext c) + 0x1c1 bytes
-            //      System.Management.Automation.dll!Microsoft.PowerShell.Commands.Internal.Format.OutCommandInner.ProcessObject(System.Management.Automation.PSObject so) + 0x1a7 bytes
-            //      System.Management.Automation.dll!Microsoft.PowerShell.Commands.Internal.Format.OutCommandInner.ProcessRecord() + 0xda bytes
-            //      System.Management.Automation.dll!System.Management.Automation.CommandProcessor.ProcessRecord() + 0x27a bytes
-            //      System.Management.Automation.dll!System.Management.Automation.CommandProcessorBase.DoExecute() + 0xe5 bytes
-            //      System.Management.Automation.dll!System.Management.Automation.Internal.PipelineProcessor.DoStepItems(object input, System.Collections.Hashtable errorResults, bool enumerate) + 0x6e bytes
-            //      System.Management.Automation.dll!Microsoft.PowerShell.Commands.Internal.Format.CommandWrapper.Process(object o) + 0x35 bytes
-            //      System.Management.Automation.dll!System.Management.Automation.CommandProcessor.ProcessRecord() + 0x27a bytes
-            //      System.Management.Automation.dll!System.Management.Automation.CommandProcessorBase.DoExecute() + 0xe5 bytes
-            //      mscorlib.dll!System.Security.SecurityContext.Run(System.Security.SecurityContext securityContext, System.Threading.ContextCallback callback, object state) + 0x96 bytes
-            //      System.Management.Automation.dll!System.Management.Automation.MshCommandRuntime.WriteObject(object sendToPipeline) + 0x9e bytes
-            //      System.Management.Automation.dll!System.Management.Automation.Cmdlet.WriteObject(object sendToPipeline) + 0xb2 bytes
-            //      DbgProvider.dll!MS.Dbg.Formatting.Commands.FormatAltCustomCommand.ApplyViewToInputObject() Line 19 + 0xf bytes  C#
-            //      ...
-            //
-
-            var orig = str;
-            str = CaStringUtil.StripControlSequences( str );
-            if( str.Length != orig.Length )
-            {
-                // If there are color sequences involved, I'll hope that my formatters are
-                // also involved, and we'll just outright lie--we'll let the console wrap
-                // us.
-                return 5;
-            }
             Util.Assert(offset >= 0, "offset >= 0");
             Util.Assert(string.IsNullOrEmpty(str) || (offset < str.Length), "offset < str.Length");
 
-            uint codePage = NativeMethods.GetConsoleOutputCP();
-            if (!IsAvailableFarEastCodePage(codePage))
+            var escapeSequenceAdjustment = 0;
+            if (checkEscapeSequences)
             {
-                return str.Length - offset;
+                int i = 0;
+                while (i < offset)
+                {
+                    ControlSequenceLength(str, ref i);
+                }
+
+                // If offset != i, we're in the middle of a sequence, which the caller should avoid,
+                // but we'll tolerate.
+                while (i < str.Length)
+                {
+                    escapeSequenceAdjustment += ControlSequenceLength(str, ref i);
+                }
             }
 
-            HWND hwnd = (HWND)0;
-            HDC hDC = (HDC)0;
-            bool istmInitialized = false;
-            TEXTMETRIC tm = new TEXTMETRIC(); ;
             int length = 0;
-            try
+            foreach (char c in str)
             {
-                int n = str.Length;
-                for (int i = offset; i < n; i++)
-                {
-                    char c = str[i];
-                    length += LengthInBufferCellsFE(c, ref hwnd, ref hDC, ref istmInitialized, ref tm);
-                }
-                return length;
+                length += LengthInBufferCells(c);
             }
-            finally
-            {
-                if (hwnd != (IntPtr)0 && hDC != (IntPtr)0)
-                {
-                    NativeMethods.ReleaseDC(hwnd, hDC);
-                }
-            }
+
+            return length - offset - escapeSequenceAdjustment;
+        }
+
+        internal static int LengthInBufferCells(char c)
+        {
+            // The following is based on http://www.cl.cam.ac.uk/~mgk25/c/wcwidth.c
+            // which is derived from https://www.unicode.org/Public/UCD/latest/ucd/EastAsianWidth.txt
+            bool isWide = c >= 0x1100 &&
+                (c <= 0x115f || /* Hangul Jamo init. consonants */
+                 c == 0x2329 || c == 0x232a ||
+                 ((uint)(c - 0x2e80) <= (0xa4cf - 0x2e80) &&
+                  c != 0x303f) || /* CJK ... Yi */
+                 ((uint)(c - 0xac00) <= (0xd7a3 - 0xac00)) || /* Hangul Syllables */
+                 ((uint)(c - 0xf900) <= (0xfaff - 0xf900)) || /* CJK Compatibility Ideographs */
+                 ((uint)(c - 0xfe10) <= (0xfe19 - 0xfe10)) || /* Vertical forms */
+                 ((uint)(c - 0xfe30) <= (0xfe6f - 0xfe30)) || /* CJK Compatibility Forms */
+                 ((uint)(c - 0xff00) <= (0xff60 - 0xff00)) || /* Fullwidth Forms */
+                 ((uint)(c - 0xffe0) <= (0xffe6 - 0xffe0)));
+
+            // We can ignore these ranges because .Net strings use surrogate pairs
+            // for this range and we do not handle surrogage pairs.
+            // (c >= 0x20000 && c <= 0x2fffd) ||
+            // (c >= 0x30000 && c <= 0x3fffd)
+            return 1 + (isWide ? 1 : 0);
         }
 
 
         /// <summary>
-        /// Check if the output buffer code page is Japanese, Simplified Chinese, Korean, or Traditional Chinese
+        /// Check if the output buffer code page is Japanese, Simplified Chinese, Korean, or Traditional Chinese.
         /// </summary>
         /// <param name="codePage"></param>
         /// <returns></returns>
@@ -3211,24 +2869,19 @@ namespace MS.DbgShell
                 codePage == 950;  // Traditional Chinese
         }
 
-#endregion Dealing with CJK
+        #endregion Dealing with CJK
 
 
-#region Cursor
-
+        #region Cursor
 
         /// <summary>
-        /// Wraps Win32 SetConsoleCursorPosition
+        /// Wraps Win32 SetConsoleCursorPosition.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console where cursor position is set
-        ///
         /// </param>
         /// <param name="cursorPosition">
-        /// 
         /// location to which the cursor will be set
-        /// 
         /// </param>
         /// <exception cref="HostException">
         /// If Win32's SetConsoleCursorPosition fails
@@ -3256,20 +2909,14 @@ namespace MS.DbgShell
             }
         }
 
-
-
         /// <summary>
-        /// Wraps Win32 GetConsoleCursorInfo
+        /// Wraps Win32 GetConsoleCursorInfo.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console where cursor info is obtained
-        /// 
         /// </param>
         /// <returns>
-        /// 
         /// cursor info
-        /// 
         /// </returns>
         /// <exception cref="HostException">
         /// If Win32's GetConsoleCursorInfo fails
@@ -3292,6 +2939,7 @@ namespace MS.DbgShell
                     ErrorCategory.ResourceUnavailable, "The Win32 internal error \"{0}\" 0x{1:X} occurred while getting cursor information. Contact Microsoft Customer Support Services." ); //ConsoleControlStrings.GetConsoleCursorInfoExceptionTemplate);
                 throw e;
             }
+
             return cursorInfo;
         }
 
@@ -3312,21 +2960,18 @@ namespace MS.DbgShell
                     ErrorCategory.ResourceUnavailable, "The Win32 internal error \"{0}\" 0x{1:X} occurred while getting console font information. Contact Microsoft Customer Support Services." ); //ConsoleControlStrings.GetConsoleFontInfoExceptionTemplate);
                 throw e;
             }
+
             return fontInfo;
         }
 
         /// <summary>
-        /// Wraps Win32 SetConsoleCursorInfo
+        /// Wraps Win32 SetConsoleCursorInfo.
         /// </summary>
         /// <param name="consoleHandle">
-        /// 
         /// handle for the console where cursor info is set
-        /// 
         /// </param>
         /// <param name="cursorInfo">
-        /// 
         /// cursor info to set the cursor
-        /// 
         /// </param>
         /// <exception cref="HostException">
         /// If Win32's SetConsoleCursorInfo fails
@@ -3349,12 +2994,12 @@ namespace MS.DbgShell
             }
         }
 
-#endregion Cursor
+        #endregion Cursor
 
-#region helper
+        #region helper
 
         /// <summary>
-        /// Helper function to create the proper HostException
+        /// Helper function to create the proper HostException.
         /// </summary>
         /// <param name="win32Error"></param>
         /// <param name="errorId"></param>
@@ -3370,9 +3015,9 @@ namespace MS.DbgShell
             return e;
         }
 
-#endregion helper
+        #endregion helper
 
-#region SendInput
+        #region SendInput
 
         internal static void MimicKeyPress(INPUT[] inputs)
         {
@@ -3389,12 +3034,10 @@ namespace MS.DbgShell
             }
         }
 
-#endregion SendInput
+        #endregion SendInput
 
         /// <summary>
-        /// 
         /// Class to hold the Native Methods used in this file enclosing class.
-        /// 
         /// </summary>
 
         internal static class NativeMethods
@@ -3403,7 +3046,7 @@ namespace MS.DbgShell
             internal const int FontTypeMask = 0x06;
             internal const int TrueTypeFont = 0x04;
 
-#region CreateFile
+            #region CreateFile
 
             [Flags]
             internal enum AccessQualifiers : uint
@@ -3443,9 +3086,9 @@ namespace MS.DbgShell
                 NakedWin32Handle templateFileWin32Handle
             );
 
-#endregion CreateFile
+            #endregion CreateFile
 
-#region Code Page
+            #region Code Page
 
             [DllImport("kernel32.dll", SetLastError = false, CharSet = CharSet.Unicode)]
             internal static extern uint GetConsoleCP();
@@ -3453,7 +3096,7 @@ namespace MS.DbgShell
             [DllImport("kernel32.dll", SetLastError = false, CharSet = CharSet.Unicode)]
             internal static extern uint GetConsoleOutputCP();
 
-#endregion Code Page
+            #endregion Code Page
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
             internal static extern HWND GetConsoleWindow();
@@ -3474,9 +3117,11 @@ namespace MS.DbgShell
             internal static extern bool GetCharWidth32(HDC hdc, uint first, uint last, out int width);
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool FlushConsoleInputBuffer(NakedWin32Handle consoleInput);
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool FillConsoleOutputAttribute
             (
                 NakedWin32Handle consoleOutput,
@@ -3487,35 +3132,54 @@ namespace MS.DbgShell
             );
 
             [DllImport("KERNEL32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool FillConsoleOutputCharacter
             (
                 NakedWin32Handle consoleOutput,
-                Char character,
+                char character,
                 DWORD length,
                 COORD writeCoord,
                 out DWORD numberOfCharsWritten
             );
 
             [DllImport("KERNEL32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-            internal static extern bool WriteConsole
+            [return: MarshalAs(UnmanagedType.Bool)]
+            private static extern unsafe bool WriteConsole
             (
                 NakedWin32Handle consoleOutput,
-                string buffer,
+                char* buffer,
                 DWORD numberOfCharsToWrite,
                 out DWORD numberOfCharsWritten,
                 IntPtr reserved
             );
 
+            internal static unsafe bool WriteConsole
+            (
+                NakedWin32Handle consoleOutput,
+                ReadOnlySpan<char> buffer,
+                DWORD numberOfCharsToWrite,
+                out DWORD numberOfCharsWritten,
+                IntPtr reserved
+            )
+            {
+                fixed (char* bufferPtr = &MemoryMarshal.GetReference(buffer))
+                {
+                    return WriteConsole(consoleOutput, bufferPtr, numberOfCharsToWrite, out numberOfCharsWritten, reserved);
+                }
+            }
             [DllImport("KERNEL32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
             internal static extern DWORD GetConsoleTitle(StringBuilder consoleTitle, DWORD size);
 
             [DllImport("KERNEL32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool SetConsoleTitle(string consoleTitle);
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool GetConsoleMode(NakedWin32Handle consoleHandle, out UInt32 mode);
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool GetConsoleScreenBufferInfo(NakedWin32Handle consoleHandle, out CONSOLE_SCREEN_BUFFER_INFO consoleScreenBufferInfo);
 
 
@@ -3537,17 +3201,33 @@ namespace MS.DbgShell
             internal static extern NakedWin32Handle GetStdHandle(DWORD handleId);
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-            internal static extern bool ReadConsole
+            [return: MarshalAs(UnmanagedType.Bool)]
+            private static extern unsafe bool ReadConsole
             (
                 NakedWin32Handle consoleInput,
-                StringBuilder buffer,
+                char* lpBuffer,
                 DWORD numberOfCharsToRead,
                 out DWORD numberOfCharsRead,
                 // This magical parameter is not documented, but is the secret to tab-completion.
                 ref CONSOLE_READCONSOLE_CONTROL controlData
             );
 
+            internal static unsafe bool ReadConsole
+            (
+                NakedWin32Handle consoleInput,
+                Span<char> buffer,
+                DWORD numberOfCharsToRead,
+                out DWORD numberOfCharsRead,
+                ref CONSOLE_READCONSOLE_CONTROL controlData
+            )
+            {
+                fixed (char* bufferPtr = &MemoryMarshal.GetReference(buffer))
+                {
+                    return ReadConsole(consoleInput, bufferPtr, numberOfCharsToRead, out numberOfCharsRead, ref controlData);
+                }
+            }
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool PeekConsoleInput
             (
                 NakedWin32Handle consoleInput,
@@ -3557,27 +3237,35 @@ namespace MS.DbgShell
             );
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool GetNumberOfConsoleInputEvents(NakedWin32Handle consoleInput, out DWORD numberOfEvents);
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool SetConsoleCtrlHandler(BreakHandler handlerRoutine, bool add);
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool SetConsoleCursorPosition(NakedWin32Handle consoleOutput, COORD cursorPosition);
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool SetConsoleMode(NakedWin32Handle consoleHandle, DWORD mode);
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool SetConsoleScreenBufferSize(NakedWin32Handle consoleOutput, COORD size);
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool SetConsoleTextAttribute(NakedWin32Handle consoleOutput, WORD attributes);
 
             [DllImport("KERNEL32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool SetConsoleWindowInfo(NakedWin32Handle consoleHandle, bool absolute, ref SMALL_RECT windowInfo);
 
             [DllImport("KERNEL32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool WriteConsoleOutput
             (
                 NakedWin32Handle consoleOutput,
@@ -3588,6 +3276,7 @@ namespace MS.DbgShell
             );
 
             [DllImport("KERNEL32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool ReadConsoleOutput
             (
                 NakedWin32Handle consoleOutput,
@@ -3598,6 +3287,7 @@ namespace MS.DbgShell
             );
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool ScrollConsoleScreenBuffer
             (
                 NakedWin32Handle consoleOutput,
@@ -3612,6 +3302,7 @@ namespace MS.DbgShell
 
             // There is no GetCurrentConsoleFontEx on Core
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool GetCurrentConsoleFontEx(NakedWin32Handle consoleOutput, bool bMaximumWindow, ref CONSOLE_FONT_INFO_EX consoleFontInfo);
 
             // There is no SetCurrentConsoleFontEx on Core
@@ -3619,12 +3310,15 @@ namespace MS.DbgShell
             internal static extern bool SetCurrentConsoleFontEx(NakedWin32Handle consoleOutput, bool bMaximumWindow, ref CONSOLE_FONT_INFO_EX consoleFontInfo);
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool GetConsoleCursorInfo(NakedWin32Handle consoleOutput, out CONSOLE_CURSOR_INFO consoleCursorInfo);
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool SetConsoleCursorInfo(NakedWin32Handle consoleOutput, ref CONSOLE_CURSOR_INFO consoleCursorInfo);
 
             [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+            [return: MarshalAs(UnmanagedType.Bool)]
             internal static extern bool ReadConsoleInput
             (
                 NakedWin32Handle consoleInput,
@@ -3640,8 +3334,9 @@ namespace MS.DbgShell
             }
         }
 
+        /*
         private const string StringsResourceBaseName = "ConsoleControlStrings";
-        /*private const string AddBreakHandlerTemplateResource = ConsoleControlStrings.AddBreakHandlerExceptionTemplate;
+        private const string AddBreakHandlerTemplateResource = ConsoleControlStrings.AddBreakHandlerExceptionTemplate;
         private const string RemoveBreakHandlerTemplateResource = ConsoleControlStrings.RemoveBreakHandlerExceptionTemplate;
         private const string AttachToParentConsoleTemplateResource = ConsoleControlStrings.AttachToParentConsoleExceptionTemplate;
         private const string DetachFromConsoleTemplateResource = ConsoleControlStrings.DetachFromConsoleExceptionTemplate;
@@ -3756,5 +3451,4 @@ namespace MS.DbgShell
             }
         } // end property BackgroundColor
     }
-}   // namespace 
-
+}
