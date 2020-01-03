@@ -41,18 +41,13 @@ Describe "WriteMem" {
             0x90 | Should Be ($readback[ 1 ])
 
 
-            [bool] $itThrew = $false
-            try
-            {
-                # This should result in a parameter binding error.
-                & $memCmd $csp @( 90, 90 ) -ErrorAction Stop
-            }
-            catch
-            {
-                $itThrew = $true
-            }
+            # This used to result in a parameter binding error on PSv5.1--what got passed
+            # in was a string, "90 90", which couldn't be handled by the
+            # AddressTransformationAttribute. But on PSv7, a string[] gets passed instead
+            # ("90", "90"), and they get parsed as hex, and it all works out.
+            & $memCmd $csp @( 90, 90 ) -ErrorAction Stop
 
-            $itThrew | Should Be $true
+            0x90 | Should Be ((& $readCmd $csp L1)[ 0 ])
 
             $myBytes = New-Object 'System.byte[]' -arg @( 2 )
             $myBytes[ 0 ] = 0x9a
@@ -61,7 +56,11 @@ Describe "WriteMem" {
             $itThrew = $false
             try
             {
-                # This should result in a parameter binding error.
+                # Unlike the previous specimen, this should still result in a parameter
+                # binding error when we are trying to write bytes, even on PSv7. The
+                # reason is because the string array passed in is @("154", "155")--they
+                # got printed as decimal, but the AdddressTransformation stuff will parse
+                # them as hex, and those values are too large to fit in a byte.
                 & $memCmd $csp $myBytes -ErrorAction Stop
             }
             catch
@@ -69,7 +68,7 @@ Describe "WriteMem" {
                 $itThrew = $true
             }
 
-            $itThrew | Should Be $true
+            $itThrew | Should Be ($memCmd -eq 'eb')
 
             # This should work, but those are decimal (0n91, 0n92).
             & $memCmd $csp -Val @( 91, 92 )

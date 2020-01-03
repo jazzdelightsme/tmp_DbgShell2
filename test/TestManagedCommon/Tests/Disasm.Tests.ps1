@@ -12,7 +12,7 @@ Describe "Disasm" {
             Set-DbgSymbolPath '' 3>&1 | Out-Null # ignore "empty symbol path" warning
 
             # Note that we redirect both error and warning streams to the output stream.
-            $disasm = uf ((lm mscorlib_ni).BaseAddress) 2>&1 3>&1
+            $disasm = uf ((lm coreclr).BaseAddress) 2>&1 3>&1
 
             $null -ne $disasm | Should Be $true
 
