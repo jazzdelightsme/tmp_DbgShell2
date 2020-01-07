@@ -33,6 +33,7 @@ private:
 
     bool m_emergencyStopped = false;
 
+    path m_clrBasePath = L"C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App\\3.1.0";
     HMODULE m_hCoreClr = nullptr;
 
     ICLRRuntimeHost4* m_runtimeHost = nullptr;
@@ -71,9 +72,11 @@ public:
     HRESULT Initialize( bool createNewAppDomain )
     {
         HRESULT hr = S_OK;
-        path coreClrPath = m_appBasePath;
+        //path coreClrPath = m_appBasePath;
+        path coreClrPath = m_clrBasePath;
         coreClrPath.append( L"coreClr.dll" );
 
+        DbgPrintf( L"coreClr path: %s\n", coreClrPath.c_str() );
         m_hCoreClr = LoadLibraryExW( coreClrPath.c_str(), nullptr, 0 );
 
         if (!m_hCoreClr)
@@ -165,7 +168,8 @@ public:
             {
                 // Construct the file name search pattern
                 wchar_t searchPath[MAX_PATH];
-                wcscpy_s(searchPath, MAX_PATH, m_appBasePath.c_str());
+                //wcscpy_s(searchPath, MAX_PATH, m_appBasePath.c_str());
+                wcscpy_s(searchPath, MAX_PATH, m_clrBasePath.c_str());
                 wcscat_s(searchPath, MAX_PATH, L"\\");
                 wcscat_s(searchPath, MAX_PATH, tpaExtensions[i]);
 
@@ -221,7 +225,27 @@ public:
             wchar_t appPaths[MAX_PATH * 50];
 
             // TODO: Debugger dir?
-            wcscpy_s(appPaths, m_appBasePath.c_str());
+            wcscpy_s(appPaths, m_clrBasePath.c_str());
+            wcscat_s(appPaths, MAX_PATH * 50, L";");
+            wcscat_s(appPaths, MAX_PATH * 50, m_appBasePath.c_str());
+
+            const wchar_t* runtimeDirs[] = {
+                L"runtimes\\win\\lib\\netcoreapp3.1",
+                L"runtimes\\win\\lib\\netcoreapp3.0",
+                L"runtimes\\win\\lib\\netcoreapp2.1",
+                L"runtimes\\win\\lib\\netcoreapp2.0",
+                L"runtimes\\win\\lib\\netstandard2.0",
+                L"runtimes\\win\\lib\\netstandard1.6",
+                L"runtimes\\win10-x64\\lib\\netstandard1.6",
+            };
+
+            for (auto runtimeDir : runtimeDirs)
+            {
+                path p = m_appBasePath;
+                p.append(runtimeDir);
+                wcscat_s(appPaths, MAX_PATH * 50, L";");
+                wcscat_s(appPaths, MAX_PATH * 50, p.c_str());
+            }
 
 
             // APP_NI_PATHS
@@ -235,6 +259,8 @@ public:
             // Native dll search directories are paths that the runtime will probe for native DLLs called via PInvoke
             wchar_t nativeDllSearchDirectories[MAX_PATH * 50];
             wcscpy_s(nativeDllSearchDirectories, appPaths);
+            wcscat_s(nativeDllSearchDirectories, MAX_PATH * 50, L";");
+            wcscat_s(nativeDllSearchDirectories, MAX_PATH * 50, m_clrBasePath.c_str());
             wcscat_s(nativeDllSearchDirectories, MAX_PATH * 50, L";");
             wcscat_s(nativeDllSearchDirectories, MAX_PATH * 50, m_appBasePath.c_str());
 
@@ -314,8 +340,11 @@ public:
         HRESULT hr = S_OK;
 
         DWORD retval = -1;
+        path assembly = m_exePath;
+        assembly.replace_extension( L"dll" );
+        DbgPrintf( L"assembly: %s\n", assembly.c_str() );
         hr = m_runtimeHost->ExecuteAssembly( m_domainId,
-                                             _FixUncPathIfNecessary( m_exePath ).c_str(),
+                                             _FixUncPathIfNecessary( assembly ).c_str(),
                                              args.size(),
                                              (LPCWSTR*) ((args.size() > 0) ? args.data() : nullptr),
                                              &retval);
