@@ -329,6 +329,7 @@ public:
         return RunAssembly( vectorArgs );
     } // end RunAssembly()
 
+    typedef int (*component_entry_point_fn)(void *arg, int32_t arg_size_in_bytes);
 
     HRESULT RunAssembly( const vector< LPCWSTR >& args )
     {
@@ -342,18 +343,22 @@ public:
         DWORD retval = -1;
         path assembly = m_exePath;
         assembly.replace_extension( L"dll" );
-        DbgPrintf( L"assembly: %s\n", assembly.c_str() );
-        hr = m_runtimeHost->ExecuteAssembly( m_domainId,
-                                             _FixUncPathIfNecessary( assembly ).c_str(),
-                                             args.size(),
-                                             (LPCWSTR*) ((args.size() > 0) ? args.data() : nullptr),
-                                             &retval);
 
+        component_entry_point_fn fn = 0;
+        hr = m_runtimeHost->CreateDelegate( m_domainId,
+                                            L"DbgShell, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
+                                            L"MS.DbgShell.MainClass",
+                                            L"MainForNativeHost",
+                                            (INT_PTR*) &fn );
         if( FAILED( hr ) )
         {
-            wprintf( L"Failed to execute assembly: %#x\n", hr );
+            wprintf( L"Failed to create the delegate: %#x\n", hr );
             goto Cleanup;
         }
+
+        retval = fn(
+            (LPCWSTR*) ((args.size() > 0) ? args.data() : nullptr), 
+            args.size() );
 
         wprintf( L"Assembly execution finished! Exit code: %i\n", retval );
 

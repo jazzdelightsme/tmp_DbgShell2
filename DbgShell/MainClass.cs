@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Management.Automation.Runspaces;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using MS.Dbg;
@@ -67,6 +68,22 @@ namespace MS.DbgShell
         // alternate thread.
         private static int sm_exitCode;
 
+
+        /// <summary>
+        ///    For use by DbgShellExt (native DLL), which requires a particular signature
+        ///    (pointer, int).
+        /// </summary>
+        static unsafe int MainForNativeHost( char** nativeArgs, int numArgs )
+        {
+            string[] args = new string[ numArgs ];
+
+            for( int i = 0; i < numArgs; i++ )
+            {
+                args[ i ] = new string( nativeArgs[ i ] );
+            }
+
+            return Main( args );
+        }
 
         static int Main( string[] args )
         {
