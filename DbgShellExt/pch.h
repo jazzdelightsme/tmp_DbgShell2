@@ -23,8 +23,6 @@
 #include <vector>
 #include <strsafe.h>
 
-#include "mscoree.h"
-
 
 static WCHAR g_LastError[ 1024 ] = { 0 };
 
