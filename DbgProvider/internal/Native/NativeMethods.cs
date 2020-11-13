@@ -159,24 +159,32 @@ namespace MS.Dbg
 
         [DllImport( ExternDll.Advapi32, CharSet = CharSet.Unicode, SetLastError = true)]
         [return: MarshalAs( UnmanagedType.Bool )]
+#pragma warning disable SYSLIB0004 // Type or member is obsolete
         [ReliabilityContract( Consistency.WillNotCorruptState, Cer.MayFail )]
+#pragma warning restore SYSLIB0004 // Type or member is obsolete
         internal static extern bool LookupPrivilegeName( string systemName,
                                                          [In] ref LUID pLuid,
                                                          [Out] StringBuilder name,
                                                          ref int cchName );
 
         [DllImport( ExternDll.Kernel32, SetLastError = true )]
+#pragma warning disable SYSLIB0004 // Type or member is obsolete
         [ReliabilityContract( Consistency.WillNotCorruptState, Cer.MayFail )]
+#pragma warning restore SYSLIB0004 // Type or member is obsolete
         internal static extern IntPtr GetCurrentProcess();
 
 
         [DllImport( ExternDll.Kernel32, SetLastError = true)]
+#pragma warning disable SYSLIB0004 // Type or member is obsolete
         [ReliabilityContract( Consistency.WillNotCorruptState, Cer.MayFail )]
+#pragma warning restore SYSLIB0004 // Type or member is obsolete
         public static extern int GetProcessId( IntPtr hProcess );
 
 
         [DllImport( ExternDll.Advapi32, CharSet = CharSet.Unicode, SetLastError = true )]
+#pragma warning disable SYSLIB0004 // Type or member is obsolete
         [ReliabilityContract( Consistency.WillNotCorruptState, Cer.MayFail )]
+#pragma warning restore SYSLIB0004 // Type or member is obsolete
         [return: MarshalAs( UnmanagedType.Bool )]
         internal static extern bool OpenProcessToken( IntPtr hProcess,
                                                       TokenAccessLevels DesiredAccess,

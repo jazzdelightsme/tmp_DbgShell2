@@ -26,7 +26,7 @@ namespace Microsoft.Diagnostics.Runtime.ICorDebug
             SetHandle(handle);
         }
 
-        [SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode = true)]
+        //[SecurityPermission(SecurityAction.LinkDemand, UnmanagedCode = true)]
         override protected bool ReleaseHandle()
         {
             return NativeMethods.CloseHandle(handle);
@@ -44,7 +44,7 @@ namespace Microsoft.Diagnostics.Runtime.ICorDebug
 
 
         [
-         System.Runtime.ConstrainedExecution.ReliabilityContract(System.Runtime.ConstrainedExecution.Consistency.WillNotCorruptState, System.Runtime.ConstrainedExecution.Cer.Success),
+         //System.Runtime.ConstrainedExecution.ReliabilityContract(System.Runtime.ConstrainedExecution.Consistency.WillNotCorruptState, System.Runtime.ConstrainedExecution.Cer.Success),
          DllImport(Kernel32LibraryName)
         ]
         public static extern bool CloseHandle(IntPtr handle);

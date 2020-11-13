@@ -1052,7 +1052,9 @@ namespace Microsoft.Diagnostics.Runtime.Interop
 
         public object Interface
         {
+#pragma warning disable CA1416 // Validate platform compatibility
             get { return (_iface != null) ? Marshal.GetObjectForIUnknown((IntPtr)_iface) : null; }
+#pragma warning restore CA1416 // Validate platform compatibility
         }
     }
 

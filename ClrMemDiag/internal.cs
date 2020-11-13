@@ -743,10 +743,18 @@ namespace Microsoft.Diagnostics.Runtime
             byte[] vsFixedInfo = new byte[len];
             Marshal.Copy(ptr, vsFixedInfo, 0, len);
 
+#pragma warning disable CS0618 // Type or member is obsolete
             minor = (ushort)Marshal.ReadInt16(vsFixedInfo, 8);
+#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
             major = (ushort)Marshal.ReadInt16(vsFixedInfo, 10);
+#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
             patch = (ushort)Marshal.ReadInt16(vsFixedInfo, 12);
+#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
             revision = (ushort)Marshal.ReadInt16(vsFixedInfo, 14);
+#pragma warning restore CS0618 // Type or member is obsolete
 
             return true;
         }

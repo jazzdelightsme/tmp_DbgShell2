@@ -849,10 +849,14 @@ namespace Microsoft.Diagnostics.Runtime.Desktop
             finally
             {
                 if (task != null)
+#pragma warning disable CA1416 // Validate platform compatibility
                     Marshal.FinalReleaseComObject(task);
+#pragma warning restore CA1416 // Validate platform compatibility
 
                 if (stackwalk != null)
+#pragma warning disable CA1416 // Validate platform compatibility
                     Marshal.FinalReleaseComObject(stackwalk);
+#pragma warning restore CA1416 // Validate platform compatibility
             }
         }
 

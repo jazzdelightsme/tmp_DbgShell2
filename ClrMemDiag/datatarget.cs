@@ -1130,10 +1130,14 @@ namespace Microsoft.Diagnostics.Runtime
         ~DacLibrary()
         {
             foreach (object obj in _release)
+#pragma warning disable CA1416 // Validate platform compatibility
                 Marshal.FinalReleaseComObject(obj);
+#pragma warning restore CA1416 // Validate platform compatibility
 
             if (_dac != null)
+#pragma warning disable CA1416 // Validate platform compatibility
                 Marshal.FinalReleaseComObject(_dac);
+#pragma warning restore CA1416 // Validate platform compatibility
 
             if (_library != IntPtr.Zero)
                 NativeMethods.FreeLibrary(_library);
@@ -1855,10 +1859,18 @@ namespace Microsoft.Diagnostics.Runtime
             if (hr != 0)
                 return;
 
+#pragma warning disable CS0618 // Type or member is obsolete
             version.Minor = (ushort)Marshal.ReadInt16(buffer, 8);
+#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
             version.Major = (ushort)Marshal.ReadInt16(buffer, 10);
+#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
             version.Patch = (ushort)Marshal.ReadInt16(buffer, 12);
+#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning disable CS0618 // Type or member is obsolete
             version.Revision = (ushort)Marshal.ReadInt16(buffer, 14);
+#pragma warning restore CS0618 // Type or member is obsolete
 
             return;
         }
