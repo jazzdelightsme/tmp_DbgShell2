@@ -127,11 +127,11 @@
     </Link>
     <!-- for VS 15.4.0+? -->
     <PostBuildEvent Condition="exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT')">
-      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT\*.dll" "$(OutDir)"    /D /Y &amp;&amp; xcopy "$(UCRTContentRoot)\bin\$(WindowsTargetPlatformVersion)\$(PlatformTarget)\ucrt\*.dll" "$(OutDir)" /D /Y </Command>
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT\*.dll" "$(OutDir)"    /D /Y &amp;&amp; xcopy "$(UCRTContentRoot)\bin\$(WindowsTargetPlatformVersion)\$(PlatformTarget)\ucrt\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
     </PostBuildEvent>
     <!-- for previous versions of VS? -->
     <PostBuildEvent Condition="!exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT')">
-      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT\*.dll" "$(OutDir)"    /D /Y &amp;&amp; xcopy "$(UCRTContentRoot)\bin\$(WindowsTargetPlatformVersion)\$(PlatformTarget)\ucrt\*.dll" "$(OutDir)" /D /Y </Command>
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT\*.dll" "$(OutDir)"    /D /Y &amp;&amp; xcopy "$(UCRTContentRoot)\bin\$(WindowsTargetPlatformVersion)\$(PlatformTarget)\ucrt\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -153,11 +153,11 @@
     </Link>
     <!-- for VS 15.4.0+? -->
     <PostBuildEvent Condition="exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT')">
-      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT\*.dll" "$(OutDir)"    /D /Y &amp;&amp; xcopy "$(UCRTContentRoot)\bin\$(WindowsTargetPlatformVersion)\$(PlatformTarget)\ucrt\*.dll" "$(OutDir)" /D /Y </Command>
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT\*.dll" "$(OutDir)"    /D /Y &amp;&amp; xcopy "$(UCRTContentRoot)\bin\$(WindowsTargetPlatformVersion)\$(PlatformTarget)\ucrt\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
     </PostBuildEvent>
     <!-- for previous versions of VS? -->
     <PostBuildEvent Condition="!exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT')">
-      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT\*.dll" "$(OutDir)"    /D /Y &amp;&amp; xcopy "$(UCRTContentRoot)\bin\$(WindowsTargetPlatformVersion)\$(PlatformTarget)\ucrt\*.dll" "$(OutDir)" /D /Y </Command>
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT\*.dll" "$(OutDir)"    /D /Y &amp;&amp; xcopy "$(UCRTContentRoot)\bin\$(WindowsTargetPlatformVersion)\$(PlatformTarget)\ucrt\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -183,11 +183,11 @@
     </Link>
     <!-- for VS 15.4.0+? -->
     <PostBuildEvent Condition="exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT')">
-      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT\*.dll" "$(OutDir)" /D /Y</Command>
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
     </PostBuildEvent>
     <!-- for previous versions of VS? -->
     <PostBuildEvent Condition="!exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT')">
-      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT\*.dll" "$(OutDir)" /D /Y</Command>
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -213,11 +213,11 @@
     </Link>
     <!-- for VS 15.4.0+? -->
     <PostBuildEvent Condition="exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT')">
-      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT\*.dll" "$(OutDir)" /D /Y</Command>
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
     </PostBuildEvent>
     <!-- for previous versions of VS? -->
     <PostBuildEvent Condition="!exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT')">
-      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT\*.dll" "$(OutDir)" /D /Y</Command>
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -257,4 +257,10 @@
   <PropertyGroup>
     <IncludePath>$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native;$(IncludePath)</IncludePath>
   </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalDependencies>nethost.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
 </Project>

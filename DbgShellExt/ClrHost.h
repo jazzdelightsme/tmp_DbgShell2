@@ -2,6 +2,8 @@
 #include "pch.h"
 
 #include <nethost.h>
+#include <coreclr_delegates.h>
+#include <hostfxr.h>
 
 using namespace std;
 using namespace filesystem;
@@ -35,6 +37,86 @@ private:
 
     bool m_emergencyStopped = false;
 
+    hostfxr_initialize_for_runtime_config_fn init_fptr = nullptr;
+    hostfxr_get_runtime_delegate_fn get_delegate_fptr = nullptr;
+    hostfxr_close_fn close_fptr = nullptr;
+
+    HRESULT load_hostfxr()
+    {
+        // Pre-allocate a large buffer for the path to hostfxr
+        char_t buffer[MAX_PATH];
+        size_t buffer_size = sizeof(buffer) / sizeof(char_t);
+        int hr = get_hostfxr_path(buffer, &buffer_size, nullptr);
+        if (hr != 0)
+        {
+            wprintf( L"get_hostfxr_path failed: %#x\n", hr );
+            return hr;
+        }
+
+        // Load hostfxr and get desired exports
+        HMODULE lib = LoadLibraryW(buffer);
+        if( !lib )
+        {
+            DWORD dwErr = GetLastError();
+            hr = HRESULT_FROM_WIN32( dwErr );
+            wprintf( L"LoadLibraryW( %s ) failed: %#x\n", buffer, hr );
+            return hr;
+        }
+
+        init_fptr = (hostfxr_initialize_for_runtime_config_fn) GetProcAddress(lib, "hostfxr_initialize_for_runtime_config");
+        if( !init_fptr )
+        {
+            DWORD dwErr = GetLastError();
+            hr = HRESULT_FROM_WIN32( dwErr );
+            wprintf( L"GetProcAddress( hostfxr_initialize_for_runtime_config ) failed: %#x\n", hr );
+            return hr;
+        }
+        get_delegate_fptr = (hostfxr_get_runtime_delegate_fn) GetProcAddress(lib, "hostfxr_get_runtime_delegate");
+        if( !get_delegate_fptr )
+        {
+            DWORD dwErr = GetLastError();
+            hr = HRESULT_FROM_WIN32( dwErr );
+            wprintf( L"GetProcAddress( hostfxr_get_runtime_delegate ) failed: %#x\n", hr );
+            return hr;
+        }
+        close_fptr = (hostfxr_close_fn) GetProcAddress(lib, "hostfxr_close");
+        if( !close_fptr )
+        {
+            DWORD dwErr = GetLastError();
+            hr = HRESULT_FROM_WIN32( dwErr );
+            wprintf( L"GetProcAddress( hostfxr_close ) failed: %#x\n", hr );
+            return hr;
+        }
+
+        return S_OK;
+    }
+
+    load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const char_t* config_path)
+    {
+        // Load .NET Core
+        void* load_assembly_and_get_function_pointer = nullptr;
+        hostfxr_handle cxt = nullptr;
+        int rc = init_fptr(config_path, nullptr, &cxt);
+        if (rc != 0 || cxt == nullptr)
+        {
+            wprintf(L"Init failed: %#x\n", rc);
+            close_fptr(cxt);
+            return nullptr;
+        }
+
+        // Get the load assembly function pointer
+        rc = get_delegate_fptr(
+            cxt,
+            hdt_load_assembly_and_get_function_pointer,
+            &load_assembly_and_get_function_pointer);
+        if (rc != 0 || load_assembly_and_get_function_pointer == nullptr)
+        {
+            wprintf(L"Get delegate failed: %#x\n", rc);
+        }
+
+        close_fptr(cxt);
+        return (load_assembly_and_get_function_pointer_fn) load_assembly_and_get_function_pointer;
+    }
 
 public:
     ClrHost( path exePath )
@@ -56,8 +138,6 @@ public:
     } // end CallInEmergency()
 
 
-
-
     // Loads and starts the CLR (if necessary) and creates a new appdomain to run
     // managed code.
     //
@@ -68,6 +148,15 @@ public:
     HRESULT Initialize( bool createNewAppDomain )
     {
         HRESULT hr = S_OK;
+
+        // TODO: appdomain stuff?
+
+        hr = load_hostfxr();
+        //hr = S_OK;
+        if( FAILED( hr ) )
+        {
+            wprintf( L"load_hostfxr() failed: %#x\n", hr );
+        }
 
         return hr;
     } // end Initialize()
