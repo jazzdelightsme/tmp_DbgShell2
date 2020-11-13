@@ -1,4 +1,3 @@
-//#include "stdafx.h"
 
 using namespace System;
 using namespace System::Reflection;
@@ -11,14 +10,14 @@ using namespace System::Security::Permissions;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 //
-[assembly:AssemblyTitleAttribute("DbgEngWrapper")];
-[assembly:AssemblyDescriptionAttribute("")];
-[assembly:AssemblyConfigurationAttribute("")];
-[assembly:AssemblyCompanyAttribute("")];
-[assembly:AssemblyProductAttribute("DbgEngWrapper")];
-[assembly:AssemblyCopyrightAttribute("Copyright (c)  2017")];
-[assembly:AssemblyTrademarkAttribute("")];
-[assembly:AssemblyCultureAttribute("")];
+[assembly:AssemblyTitleAttribute(L"DbgEngWrapper")];
+[assembly:AssemblyDescriptionAttribute(L"")];
+[assembly:AssemblyConfigurationAttribute(L"")];
+[assembly:AssemblyCompanyAttribute(L"")];
+[assembly:AssemblyProductAttribute(L"DbgEngWrapper")];
+[assembly:AssemblyCopyrightAttribute(L"Copyright (c)  2020")];
+[assembly:AssemblyTrademarkAttribute(L"")];
+[assembly:AssemblyCultureAttribute(L"")];
 
 //
 // Version information for an assembly consists of the following four values:

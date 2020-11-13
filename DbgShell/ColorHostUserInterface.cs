@@ -474,9 +474,15 @@ namespace MS.DbgShell
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void WriteToConsole(char c, bool transcribeResult)
         {
-            ReadOnlySpan<char> value = stackalloc char[1] { c };
+            ReadOnlySpan<char> value = stackalloc char[1] {c};
             WriteToConsole(value, transcribeResult);
         }
+
+        internal void WriteToConsole(string value, bool transcribeResult)
+        {
+            WriteToConsole(value.AsSpan(), transcribeResult, newLine: false);
+        }
+
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void WriteToConsole(ReadOnlySpan<char> value, bool transcribeResult)
@@ -484,27 +490,29 @@ namespace MS.DbgShell
             WriteToConsole(value, transcribeResult, newLine: false);
         }
 
-        private void WriteToConsole(ReadOnlySpan<char> value, bool transcribeResult, bool newLine)
+        internal void WriteToConsole(ReadOnlySpan<char> value, bool transcribeResult, bool newLine)
         {
             ConsoleHandle handle = ConsoleControl.GetActiveScreenBufferHandle();
 
             // Ensure that we're in the proper line-output mode.  We don't lock here as it does not matter if we
             // attempt to set the mode from multiple threads at once.
+
             ConsoleControl.ConsoleModes m = ConsoleControl.GetMode(handle);
 
-            const ConsoleControl.ConsoleModes DesiredMode =
-                ConsoleControl.ConsoleModes.ProcessedOutput
+            const ConsoleControl.ConsoleModes desiredMode =
+                    ConsoleControl.ConsoleModes.ProcessedOutput
                 | ConsoleControl.ConsoleModes.WrapEndOfLine;
 
-            if ((m & DesiredMode) != DesiredMode)
+            if ((m & desiredMode) != desiredMode)
             {
-                m |= DesiredMode;
+                m |= desiredMode;
                 ConsoleControl.SetMode(handle, m);
             }
 
             PreWrite();
 
             // This is atomic, so we don't lock here...
+
             ConsoleControl.WriteConsole(handle, value, newLine);
 
          // if (_isInteractiveTestToolListening && Console.IsOutputRedirected)

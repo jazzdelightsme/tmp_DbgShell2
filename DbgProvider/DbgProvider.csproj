@@ -1,29 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>MS.Dbg</RootNamespace>
+    <TargetFramework>net5.0</TargetFramework>
+    <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Platforms>x64;x86</Platforms>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <!-- <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir> -->
+    <OutputPath>..\bin\$(Configuration)\$(Platform)\Debugger</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <OutputPath>..\bin\Debug\x64\Debugger</OutputPath>
-    <DocumentationFile>$(OutputPath)\DbgProvider.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <OutputPath>..\bin\Release\x64\Debugger</OutputPath>
-    <DocumentationFile>$(OutputPath)\DbgProvider.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <OutputPath>..\bin\Debug\x86\Debugger</OutputPath>
-    <DocumentationFile>$(OutputPath)\DbgProvider.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>..\bin\Release\x86\Debugger</OutputPath>
     <DocumentationFile>$(OutputPath)\DbgProvider.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
@@ -33,13 +21,16 @@
     <None Include="public\Debugger\DbgEventCallback.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.0.0-rc.1" />
+    <PackageReference Include="System.Management.Automation" Version="7.1.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="Unofficial.Microsoft.DebuggerBinaries" Version="10.0.17763.132" />
-    <PackageReference Include="Unofficial.Microsoft.TextTemplating.BuildTasks" Version="16.0.0.1">
+    <PackageReference Include="Unofficial.Microsoft.TextTemplating.BuildTasks" Version="16.9.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\ClrMemDiag\ClrMemDiag.csproj" />
     <ProjectReference Include="..\DbgEngWrapper\DbgEngWrapper.vcxproj" />

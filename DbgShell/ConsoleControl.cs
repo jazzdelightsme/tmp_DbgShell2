@@ -2589,6 +2589,12 @@ namespace MS.DbgShell
                 return;
             }
 
+            // [danthom] Debugging note: put a breakpoint here to catch output as it
+            // is going out.
+
+            // If a newline gets injected between strings where a color control
+            // sequence is broken across them, things blow up terribly.
+
             // Native WriteConsole doesn't support output buffer longer than 64K.
             // We need to chop the output string if it is too long.
             int cursor = 0; // This records the chopping position in output string
@@ -2631,7 +2637,8 @@ namespace MS.DbgShell
 
                 // If a newline gets injected between strings where a color control
                 // sequence is broken across them, things blow up terribly.
-                if( 0 == Util.Strcmp_OI( ColorHostUserInterface.Crlf, outBuffer ) )
+                //if( 0 == Util.Strcmp_OI( ColorHostUserInterface.Crlf, outBuffer ) )
+                if( ColorHostUserInterface.Crlf.AsSpan().SequenceEqual( outBuffer ) )
                 {
                     _RealWriteConsole( consoleHandle, outBuffer );
                 }
@@ -2646,7 +2653,7 @@ namespace MS.DbgShell
         // kind of problem with it, and then we try to WriteErrorLine... and hilarity ensues.
         // TODO: a possible mitigation is if we detect an invalid control code or somesuch,
         // reset the colors and parse state.
-        private static AnsiColorWriter sm_colorWriter = new AnsiColorWriter();
+        private static readonly AnsiColorWriter sm_colorWriter = new AnsiColorWriter();
 
         private static void _RealWriteConsole(ConsoleHandle consoleHandle, ReadOnlySpan<char> buffer)
         {

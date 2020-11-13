@@ -41,7 +41,8 @@ CLRVersion = '4.0'
 ProcessorArchitecture = ''
 
 # Modules that must be imported into the global environment prior to importing this module
-RequiredModules = @( "Pester" )
+# TODO: Can't use provider-qualified paths here: https://github.com/PowerShell/PowerShell/issues/14083
+#RequiredModules = @( "filesystem::$PSScriptRoot\Pester\Pester.psd1" )
 
 # Assemblies that must be loaded prior to importing this module
 RequiredAssemblies = @()
