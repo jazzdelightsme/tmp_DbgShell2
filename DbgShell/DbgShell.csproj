@@ -11,6 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="C:\Users\danthom\.nuget\packages\microsoft.powershell.sdk\7.1.0\contentFiles\any\any\runtimes\unix\lib\net5.0\Modules\Microsoft.PowerShell.Host\Microsoft.PowerShell.Host.psd1" />
+    <None Remove="C:\Users\danthom\.nuget\packages\microsoft.powershell.sdk\7.1.0\contentFiles\any\any\runtimes\unix\lib\net5.0\Modules\Microsoft.PowerShell.Management\Microsoft.PowerShell.Management.psd1" />
+    <None Remove="C:\Users\danthom\.nuget\packages\microsoft.powershell.sdk\7.1.0\contentFiles\any\any\runtimes\unix\lib\net5.0\Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1" />
+    <None Remove="C:\Users\danthom\.nuget\packages\microsoft.powershell.sdk\7.1.0\contentFiles\any\any\runtimes\unix\lib\net5.0\Modules\Microsoft.PowerShell.Utility\Microsoft.PowerShell.Utility.psd1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.1.0" />
   </ItemGroup>
 
