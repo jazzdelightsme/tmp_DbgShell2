@@ -97,7 +97,9 @@ private:
         void* load_assembly_and_get_function_pointer = nullptr;
         hostfxr_handle cxt = nullptr;
         int rc = init_fptr(config_path, nullptr, &cxt);
-        if (rc != 0 || cxt == nullptr)
+        // rc might be 1 ("S_FALSE"?) if we've already done this before. So we'll just
+        // check cxt.
+        if (cxt == nullptr)
         {
             wprintf(L"Init failed: %#x\n", rc);
             close_fptr(cxt);
@@ -123,7 +125,8 @@ public:
         : m_exePath( exePath )
     {
         m_appBasePath = exePath.parent_path();
-        m_configFilePath = _FixUncPathIfNecessary( exePath ) + L".config";
+        m_configFilePath = _FixUncPathIfNecessary( exePath );
+        m_configFilePath = m_configFilePath.replace_extension( L"runtimeconfig.json" );
     } // end constructor
 
 
@@ -194,19 +197,44 @@ public:
         path assembly = m_exePath;
         assembly.replace_extension( L"dll" );
 
-        component_entry_point_fn fn = 0;
-     // hr = m_runtimeHost->CreateDelegate( m_domainId,
-     //                                     L"DbgShell, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null",
-     //                                     L"MS.DbgShell.MainClass",
-     //                                     L"MainForNativeHost",
-     //                                     (INT_PTR*) &fn );
-     // if( FAILED( hr ) )
-     // {
-     //     wprintf( L"Failed to create the delegate: %#x\n", hr );
-     //     goto Cleanup;
-     // }
 
-        retval = fn(
+        load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_pointer = nullptr;
+        load_assembly_and_get_function_pointer = get_dotnet_load_assembly( m_configFilePath.c_str() );
+
+        if( !load_assembly_and_get_function_pointer )
+        {
+            wprintf( L"get_dotnet_load_assembly( %s ) failed\n", m_configFilePath.c_str() );
+            return E_FAIL;
+        }
+
+        const char_t* dotnet_type = L"MS.DbgShell.MainClass, DbgShell";
+        const char_t* dotnet_type_method = L"MainForNativeHost";
+
+        component_entry_point_fn entryPoint = nullptr;
+        int rc = load_assembly_and_get_function_pointer( assembly.c_str(),
+                                                         dotnet_type,
+                                                         dotnet_type_method,
+                                                         nullptr /*delegate_type_name*/,
+                                                         nullptr,
+                                                         (void**) &entryPoint);
+
+        if( !entryPoint )
+        {
+            wprintf( L"Failed to find managed entry point: %#x\n", rc );
+            // Dunno what kind of return value this is...
+            if( FAILED( rc ) )
+            {
+                hr = rc;
+            }
+            else
+            {
+                hr = HRESULT_FROM_WIN32( rc );
+            }
+
+            return hr;
+        }
+
+        retval = entryPoint(
             (LPCWSTR*) ((args.size() > 0) ? args.data() : nullptr), 
             args.size() );
 

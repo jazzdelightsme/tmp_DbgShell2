@@ -73,8 +73,9 @@ namespace MS.DbgShell
         ///    For use by DbgShellExt (native DLL), which requires a particular signature
         ///    (pointer, int).
         /// </summary>
-        static unsafe int MainForNativeHost( char** nativeArgs, int numArgs )
+        static unsafe int MainForNativeHost( IntPtr nativeArgs_, int numArgs )
         {
+            char** nativeArgs = (char**) nativeArgs_;
             string[] args = new string[ numArgs ];
 
             for( int i = 0; i < numArgs; i++ )
