@@ -39,6 +39,7 @@ private:
 
     hostfxr_initialize_for_runtime_config_fn init_fptr = nullptr;
     hostfxr_get_runtime_delegate_fn get_delegate_fptr = nullptr;
+    hostfxr_get_runtime_properties_fn get_runtime_properties_fptr = nullptr;
     hostfxr_close_fn close_fptr = nullptr;
 
     HRESULT load_hostfxr()
@@ -79,6 +80,14 @@ private:
             wprintf( L"GetProcAddress( hostfxr_get_runtime_delegate ) failed: %#x\n", hr );
             return hr;
         }
+        get_runtime_properties_fptr = (hostfxr_get_runtime_properties_fn) GetProcAddress(lib, "hostfxr_get_runtime_properties");
+        if( !get_runtime_properties_fptr )
+        {
+            DWORD dwErr = GetLastError();
+            hr = HRESULT_FROM_WIN32( dwErr );
+            wprintf( L"GetProcAddress( hostfxr_get_runtime_properties ) failed: %#x\n", hr );
+            return hr;
+        }
         close_fptr = (hostfxr_close_fn) GetProcAddress(lib, "hostfxr_close");
         if( !close_fptr )
         {
@@ -114,6 +123,24 @@ private:
         if (rc != 0 || load_assembly_and_get_function_pointer == nullptr)
         {
             wprintf(L"Get delegate failed: %#x\n", rc);
+        }
+
+        const char_t* keys[ 128 ] = { 0 };
+        const char_t* values[ 128 ] = { 0 };
+        size_t count = _countof( keys );
+
+        rc = get_runtime_properties_fptr( cxt, &count, keys, values );
+        if( rc )
+        {
+            wprintf( L"get_runtime_properties_fptr failed: %#x\n", rc );
+        }
+        else
+        {
+            wprintf( L"Found %i properties:\n", count );
+            for( int i = 0; i < count; i++ )
+            {
+                wprintf( L"    [%s]: %s\n", keys[ i ], values[ i ] );
+            }
         }
 
         close_fptr(cxt);
