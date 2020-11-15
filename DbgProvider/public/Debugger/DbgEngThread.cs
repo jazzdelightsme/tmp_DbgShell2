@@ -21,6 +21,13 @@ namespace MS.Dbg
             // rest of the lifetime of the process.
             public static readonly DbgEngThread Singleton = _ProcureDbgEngThread();
 
+            // We have an explicit static constructor so that the C# compiler will not
+            // mark the type as "beforefieldinit", which is important for the thread
+            // safety of the initializer for Singleton.
+            static DbgEngThread()
+            {
+            }
+
             private static DbgEngThread _ProcureDbgEngThread()
             {
                 if( null != DbgProvider.GuestModeGuestThread )
