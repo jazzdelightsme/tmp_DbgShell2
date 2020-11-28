@@ -1311,7 +1311,17 @@ namespace MS.DbgShell
                     }
                     catch( RuntimeException rte )
                     {
-                        _ReportException( rte, shell );
+                        try
+                        {
+                            _ReportException( rte, shell );
+                        }
+                        catch( Exception e )
+                        {
+                            LogManager.Trace( "Wuh-oh: problem reporting exception: {0}", Util.GetExceptionMessages( e ) );
+                            LogManager.Trace( "whole thing: {0}", e );
+                            LogManager.Trace( "" );
+                            LogManager.Trace( "The *original* problem was: {0}", rte );
+                        }
                         // TODO BUGBUG: the real PowerShell will set the exit code and
                         // exit the input loop if init fails. (throwing from here)
                     }
