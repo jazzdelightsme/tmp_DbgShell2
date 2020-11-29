@@ -23,6 +23,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestManagedConsoleApp", "te
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DbgShellExt", "DbgShellExt\DbgShellExt.vcxproj", "{3220FA19-B328-4DF2-B019-8B4AFA6DD1C4}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotNetLoadingShim", "DotNetLoadingShim\DotNetLoadingShim.csproj", "{84EC0FC3-77A3-44E5-843E-ED4F111E6322}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -103,6 +105,14 @@ Global
 		{3220FA19-B328-4DF2-B019-8B4AFA6DD1C4}.Release|x64.Build.0 = Release|x64
 		{3220FA19-B328-4DF2-B019-8B4AFA6DD1C4}.Release|x86.ActiveCfg = Release|Win32
 		{3220FA19-B328-4DF2-B019-8B4AFA6DD1C4}.Release|x86.Build.0 = Release|Win32
+		{84EC0FC3-77A3-44E5-843E-ED4F111E6322}.Debug|x64.ActiveCfg = Debug|x64
+		{84EC0FC3-77A3-44E5-843E-ED4F111E6322}.Debug|x64.Build.0 = Debug|x64
+		{84EC0FC3-77A3-44E5-843E-ED4F111E6322}.Debug|x86.ActiveCfg = Debug|x86
+		{84EC0FC3-77A3-44E5-843E-ED4F111E6322}.Debug|x86.Build.0 = Debug|x86
+		{84EC0FC3-77A3-44E5-843E-ED4F111E6322}.Release|x64.ActiveCfg = Release|x64
+		{84EC0FC3-77A3-44E5-843E-ED4F111E6322}.Release|x64.Build.0 = Release|x64
+		{84EC0FC3-77A3-44E5-843E-ED4F111E6322}.Release|x86.ActiveCfg = Release|x86
+		{84EC0FC3-77A3-44E5-843E-ED4F111E6322}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

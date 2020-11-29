@@ -40,6 +40,7 @@ private:
     hostfxr_initialize_for_runtime_config_fn init_fptr = nullptr;
     hostfxr_get_runtime_delegate_fn get_delegate_fptr = nullptr;
     hostfxr_get_runtime_properties_fn get_runtime_properties_fptr = nullptr;
+    hostfxr_set_runtime_property_value_fn set_runtime_property_value_fptr = nullptr;
     hostfxr_close_fn close_fptr = nullptr;
 
     HRESULT load_hostfxr()
@@ -88,6 +89,14 @@ private:
             wprintf( L"GetProcAddress( hostfxr_get_runtime_properties ) failed: %#x\n", hr );
             return hr;
         }
+        set_runtime_property_value_fptr  = (hostfxr_set_runtime_property_value_fn) GetProcAddress(lib, "hostfxr_set_runtime_property_value");
+        if( !set_runtime_property_value_fptr )
+        {
+            DWORD dwErr = GetLastError();
+            hr = HRESULT_FROM_WIN32( dwErr );
+            wprintf( L"GetProcAddress( hostfxr_set_runtime_property_value ) failed: %#x\n", hr );
+            return hr;
+        }
         close_fptr = (hostfxr_close_fn) GetProcAddress(lib, "hostfxr_close");
         if( !close_fptr )
         {
@@ -106,8 +115,8 @@ private:
         void* load_assembly_and_get_function_pointer = nullptr;
         hostfxr_handle cxt = nullptr;
         int rc = init_fptr(config_path, nullptr, &cxt);
-        // rc might be 1 ("S_FALSE"?) if we've already done this before. So we'll just
-        // check cxt.
+        // rc might be 1 ("Success_HostAlreadyInitialized") if we've already done this
+        // before. So we'll just check cxt.
         if (cxt == nullptr)
         {
             wprintf(L"Init failed: %#x\n", rc);
@@ -123,6 +132,13 @@ private:
         if (rc != 0 || load_assembly_and_get_function_pointer == nullptr)
         {
             wprintf(L"Get delegate failed: %#x\n", rc);
+        }
+
+        // TODO: removeme: this is not working; it fails with InvalidArgFailure (0x80008081)
+        rc = set_runtime_property_value_fptr(cxt, L"APP_PATHS", L"Debugger" );
+        if( rc )
+        {
+            wprintf( L"set_runtime_property_value_fptr failed: %#x\n", rc );
         }
 
         const char_t* keys[ 128 ] = { 0 };
@@ -181,6 +197,11 @@ public:
 
         // TODO: appdomain stuff?
 
+        // TEMP tracing stuff
+        // This doesn't seem to be getting me any output... are we failing too early???
+        SetEnvironmentVariable( L"COREHOST_TRACE", L"1" );
+        SetEnvironmentVariable( L"COREHOST_TRACE_VERBOSITY", L"4" );
+
         hr = load_hostfxr();
         //hr = S_OK;
         if( FAILED( hr ) )
@@ -223,6 +244,7 @@ public:
         DWORD retval = -1;
         path assembly = m_exePath;
         assembly.replace_extension( L"dll" );
+        assembly.replace_filename( L"DotNetLoadingShim.dll" );
 
 
         load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_pointer = nullptr;
@@ -234,14 +256,15 @@ public:
             return E_FAIL;
         }
 
-        const char_t* dotnet_type = L"MS.DbgShell.MainClass, DbgShell";
-        const char_t* dotnet_type_method = L"MainForNativeHost";
+        //const char_t* dotnet_type = L"MS.DbgShell.MainClass, DbgShell";
+        const char_t* dotnet_type = L"DotNetLoadingShim.Shim, DotNetLoadingShim";
+        const char_t* dotnet_type_method = L"BounceToDefaultALC";
 
         component_entry_point_fn entryPoint = nullptr;
         int rc = load_assembly_and_get_function_pointer( assembly.c_str(),
                                                          dotnet_type,
                                                          dotnet_type_method,
-                                                         nullptr /*delegate_type_name*/,
+                                                         (const char_t*) -1, // "unmanaged callers only"
                                                          nullptr,
                                                          (void**) &entryPoint);
 
