@@ -14,6 +14,7 @@ namespace DotNetLoadingShim
         [UnmanagedCallersOnly]
         internal static unsafe int BounceToDefaultALC( IntPtr nativeArgs, int numArgs )
         {
+            Console.WriteLine( "Hi from BounceToDefaultALC" );
             if( null == m_mi )
             {
                 string dir = Path.GetDirectoryName( Assembly.GetExecutingAssembly().Location );
@@ -29,7 +30,24 @@ namespace DotNetLoadingShim
             m_parameters[ 0 ] = nativeArgs;
             m_parameters[ 1 ] = numArgs;
 
-            return (int) m_mi.Invoke( null, m_parameters );
+            if( null == m_mi )
+            {
+                Console.WriteLine( "Oh man... we didn't get the m_mi..." );
+                return -1;
+            }
+            else
+            {
+                Console.WriteLine( "Calling through m_mi..." );
+            }
+            try
+            {
+                return (int) m_mi.Invoke( null, m_parameters );
+            }
+            catch( Exception e )
+            {
+                Console.WriteLine( "m_mi blew up: {0}", e );
+                return -2;
+            }
         }
     }
 }

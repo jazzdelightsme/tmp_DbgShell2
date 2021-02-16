@@ -38,10 +38,17 @@ private:
     bool m_emergencyStopped = false;
 
     hostfxr_initialize_for_runtime_config_fn init_fptr = nullptr;
+    hostfxr_set_error_writer_fn set_error_writer_fptr = nullptr;
     hostfxr_get_runtime_delegate_fn get_delegate_fptr = nullptr;
     hostfxr_get_runtime_properties_fn get_runtime_properties_fptr = nullptr;
     hostfxr_set_runtime_property_value_fn set_runtime_property_value_fptr = nullptr;
     hostfxr_close_fn close_fptr = nullptr;
+
+
+    static void HostError(const char_t* message)
+    {
+        wprintf( L"DotNet Host error: %s\n", message );
+    }
 
     HRESULT load_hostfxr()
     {
@@ -62,6 +69,15 @@ private:
             DWORD dwErr = GetLastError();
             hr = HRESULT_FROM_WIN32( dwErr );
             wprintf( L"LoadLibraryW( %s ) failed: %#x\n", buffer, hr );
+            return hr;
+        }
+
+		set_error_writer_fptr = (hostfxr_set_error_writer_fn) GetProcAddress(lib, "hostfxr_set_error_writer");
+        if( !set_error_writer_fptr )
+        {
+            DWORD dwErr = GetLastError();
+            hr = HRESULT_FROM_WIN32( dwErr );
+            wprintf( L"GetProcAddress( hostfxr_set_error_writer ) failed: %#x\n", hr );
             return hr;
         }
 
@@ -106,6 +122,8 @@ private:
             return hr;
         }
 
+        set_error_writer_fptr(HostError);
+
         return S_OK;
     }
 
@@ -124,6 +142,37 @@ private:
             return nullptr;
         }
 
+        // This must happen BEFORE loading the runtime.
+        // TODO: figure out how to get this set via a config file of some sort
+        //
+        // And the config file needs to be able to handle our custom part (the "Debugger"
+        // directory), plus it ought to automagically handle all the paths for the nuget dependencies
+        path probingPath1 = m_exePath;
+        probingPath1 = probingPath1.parent_path().append(L"Debugger");
+
+        // For System.Management.Automation.dll
+        path probingPath2 = m_exePath;
+        probingPath2 = probingPath2.parent_path().append(L"runtimes\\win\\lib\\net5.0");
+
+        // For NewtonSoft.Json.dll
+        path probingPath3 = m_exePath;
+        probingPath3 = probingPath3.parent_path();
+
+        // For Microsoft.Management.Infrastructure.dll
+        path probingPath4 = m_exePath;
+        probingPath4 = probingPath4.parent_path().append(L"runtimes\\win10-x64\\lib\\netstandard1.6");
+
+        wstring probingPath = probingPath1.native() + L";" +
+                              probingPath2.native() + L";" +
+                              probingPath3.native() + L";" +
+                              probingPath4.native();
+
+        rc = set_runtime_property_value_fptr(cxt, L"APP_PATHS", probingPath.c_str() );
+        if( rc )
+        {
+            wprintf( L"set_runtime_property_value_fptr failed: %#x\n", rc );
+        }
+
         // Get the load assembly function pointer
         rc = get_delegate_fptr(
             cxt,
@@ -132,13 +181,6 @@ private:
         if (rc != 0 || load_assembly_and_get_function_pointer == nullptr)
         {
             wprintf(L"Get delegate failed: %#x\n", rc);
-        }
-
-        // TODO: removeme: this is not working; it fails with InvalidArgFailure (0x80008081)
-        rc = set_runtime_property_value_fptr(cxt, L"APP_PATHS", L"Debugger" );
-        if( rc )
-        {
-            wprintf( L"set_runtime_property_value_fptr failed: %#x\n", rc );
         }
 
         const char_t* keys[ 128 ] = { 0 };
