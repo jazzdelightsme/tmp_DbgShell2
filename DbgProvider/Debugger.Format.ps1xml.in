@@ -323,18 +323,7 @@
               <CustomItem>
                 <ExpressionBinding>
                   <ScriptBlock>
-<# if( isColor ) { #>
-                    if( $_ -is [MS.Dbg.ISupportColor] )
-                    {
-                        $_.ToColorString().ToString( [MS.Dbg.DbgProvider]::HostSupportsColor )
-                    }
-                    else
-                    {
-                        $_.ToString()
-                    }
-<# } else { #>
-                    $_.ToString()
-<# } #>
+CUSTOM_TO_STRING_BLOCK
                   </ScriptBlock>
                 </ExpressionBinding>
               </CustomItem>
@@ -353,11 +342,7 @@
               <CustomItem>
                 <ExpressionBinding>
                   <ScriptBlock>
-<# if( isColor ) { #>
-                    $_.ToString( [MS.Dbg.DbgProvider]::HostSupportsColor )
-<# } else { #>
-                    $_.ToString( $false )
-<# } #>
+TO_STRING_BLOCK
                   </ScriptBlock>
                 </ExpressionBinding>
               </CustomItem>
@@ -540,11 +525,7 @@
             </TableColumnHeader>
             <TableColumnHeader>
               <Label>Offset</Label>
-<# if( is32Bit ) { #>
-              <Width>10</Width>
-<# } else { #>
-              <Width>18</Width>
-<# } #>
+WIDTH_BLOCK
               <Alignment>left</Alignment>
             </TableColumnHeader>
             <TableColumnHeader>
@@ -604,7 +585,7 @@
                         return ""
                     }
 
-                    [MS.Dbg.DbgProvider]::FormatAddress( $_.Offset, $<#= is32Bit.ToString() #>, $true )
+                    [MS.Dbg.DbgProvider]::FormatAddress( $_.Offset, $IS_THIRTY_TWO_BIT, $true )
                   </ScriptBlock>
                 </TableColumnItem>
                 <TableColumnItem>
@@ -664,20 +645,12 @@
             </TableColumnHeader>
             <TableColumnHeader>
               <Label>Start</Label>
-<# if( is32Bit ) { #>
-              <Width>8</Width>
-<# } else { #>
-              <Width>18</Width>
-<# } #>
+EIGHT_OR_EIGHTEEN
               <Alignment>center</Alignment>
             </TableColumnHeader>
             <TableColumnHeader>
               <Label>End</Label>
-<# if( is32Bit ) { #>
-              <Width>8</Width>
-<# } else { #>
-              <Width>18</Width>
-<# } #>
+EIGHT_OR_EIGHTEEN
               <Alignment>center</Alignment>
             </TableColumnHeader>
             <!-- TODO: version? -->
@@ -699,12 +672,12 @@
                 </TableColumnItem>
                 <TableColumnItem>
                   <ScriptBlock>
-                    [MS.Dbg.DbgProvider]::FormatAddress( $_.BaseAddress, $<#= is32Bit.ToString() #>, $true )
+                    [MS.Dbg.DbgProvider]::FormatAddress( $_.BaseAddress, $IS_THIRTY_TWO_BIT, $true )
                   </ScriptBlock>
                 </TableColumnItem>
                 <TableColumnItem>
                   <ScriptBlock>
-                    [MS.Dbg.DbgProvider]::FormatAddress( $_.BaseAddress + $_.Size, $<#= is32Bit.ToString() #>, $true )
+                    [MS.Dbg.DbgProvider]::FormatAddress( $_.BaseAddress + $_.Size, $IS_THIRTY_TWO_BIT, $true )
                   </ScriptBlock>
                 </TableColumnItem>
                 <TableColumnItem>
@@ -827,13 +800,13 @@
                 <ListItem>
                   <Label>ModuleBase</Label>
                   <ScriptBlock>
-                    [MS.Dbg.DbgProvider]::FormatAddress( $_.ModuleBase, $<#= is32Bit.ToString() #>, $true )
+                    [MS.Dbg.DbgProvider]::FormatAddress( $_.ModuleBase, $IS_THIRTY_TWO_BIT, $true )
                   </ScriptBlock>
                 </ListItem>
                 <ListItem>
                   <Label>Address</Label>
                   <ScriptBlock>
-                    [MS.Dbg.DbgProvider]::FormatAddress( $_.Offset, $<#= is32Bit.ToString() #>, $true )
+                    [MS.Dbg.DbgProvider]::FormatAddress( $_.Offset, $IS_THIRTY_TWO_BIT, $true )
                   </ScriptBlock>
                 </ListItem>
                 <ListItem>
@@ -891,11 +864,7 @@
             <TableColumnHeader>
               <Label>Address</Label>
               <Alignment>center</Alignment>
-<# if( is32Bit ) { #>
-              <Width>10</Width>
-<# } else { #>
-              <Width>18</Width>
-<# } #>
+WIDTH_BLOCK
             </TableColumnHeader>
             <TableColumnHeader>
               <Label>Size</Label>
@@ -931,7 +900,7 @@
                     }
                     else
                     {
-                        [MS.Dbg.DbgProvider]::FormatAddress( $_.DSE.Offset, $<#= is32Bit.ToString() #>, $true )
+                        [MS.Dbg.DbgProvider]::FormatAddress( $_.DSE.Offset, $IS_THIRTY_TWO_BIT, $true )
                     }
                   </ScriptBlock>
                 </TableColumnItem>
@@ -983,7 +952,7 @@
                         }
                         else
                         {
-                            [void] $sb.Append( [MS.Dbg.DbgProvider]::FormatAddress( $_.DSE.Offset, $<#= is32Bit.ToString() #>, $true ) )
+                            [void] $sb.Append( [MS.Dbg.DbgProvider]::FormatAddress( $_.DSE.Offset, $IS_THIRTY_TWO_BIT, $true ) )
                         }
                         #$sb.AppendFormat( "{0:x} bytes", $_.DSE.Size )
                         [void] $sb.Append( " : 0x" )

@@ -82,5 +82,11 @@ xcopy "$uqProjectDir\TypeInfoDebugging.psm1" "$uqDestDir\..\TypeInfoDebugging\" 
 [Console]::WriteLine( "Copying Markdown docs..." )
 robocopy "$uqProjectDir\..\doc" "$uqDestDir\..\doc\" /E /XF *.swp /XX /NP
 
+$formattingOutputFile = "$uqDestDir\Debugger.Format.Color.ps1xml"
+& "$PSScriptRoot\GenerateFormattingFile.ps1" -Out $formattingOutputFile -ThirtyTwoBit:($PlatformName -eq 'x86') -Color
+
+$formattingOutputFile = "$uqDestDir\Debugger.Format.ps1xml"
+& "$PSScriptRoot\GenerateFormattingFile.ps1" -Out $formattingOutputFile -ThirtyTwoBit:($PlatformName -eq 'x86')
+
 $LastExitCode = 0
 
