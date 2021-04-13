@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <RootNamespace>MS.Dbg</RootNamespace>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <TargetPlatformIdentifier>Windows</TargetPlatformIdentifier>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
