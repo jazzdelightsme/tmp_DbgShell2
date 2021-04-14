@@ -27,6 +27,7 @@
     <TargetFramework>net5.0-windows</TargetFramework>
     <OutDir>$(SolutionDir)bin\$(Configuration)\$(PlatformTarget)\Debugger\</OutDir>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <LanguageStandard>stdcpp17</LanguageStandard>
     <PlatformToolset>v142</PlatformToolset>
