@@ -25,4 +25,17 @@
   <ItemGroup>
     <ProjectReference Include="..\DbgProvider\DbgProvider.csproj" />
   </ItemGroup>
+
+  <!--
+      Properties for building a "self-contained" app...
+  -->
+  <PropertyGroup Condition="'$(Platform)'=='x64'">
+    <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Platform)'=='x86'">
+    <RuntimeIdentifier>win10-x86</RuntimeIdentifier>
+    <SelfContained>true</SelfContained>
+  </PropertyGroup>
 </Project>
