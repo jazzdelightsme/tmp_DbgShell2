@@ -24,7 +24,7 @@
     <Keyword>NetCoreCProj</Keyword>
     <RootNamespace>DbgEngWrapper</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net5.0-windows</TargetFramework>
     <OutDir>$(SolutionDir)bin\$(Configuration)\$(PlatformTarget)\Debugger\</OutDir>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -120,6 +120,13 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+
+  <!--
+  Workaround for publish error: "C++/CLI projects targeting .NET Core cannot use SelfContained=true."
+
+  See: https://github.com/dotnet/sdk/issues/12345#issuecomment-751940542
+  -->
+  <Target Name="_CheckForLanguageAndFeatureCombinationSupport"></Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
