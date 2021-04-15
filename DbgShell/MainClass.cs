@@ -880,6 +880,9 @@ namespace MS.DbgShell
             }
 
             // Apparently PowerShell.exe sets up the user module path. Huh.
+
+            // TODO: need to update this stuff for PS7
+
             string userModules = Path.Combine( Environment.GetFolderPath( Environment.SpecialFolder.MyDocuments ),
                                                "WindowsPowerShell",
                                                "Modules" );
