@@ -12,19 +12,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="C:\Users\danthom\.nuget\packages\microsoft.powershell.sdk\7.1.0\contentFiles\any\any\runtimes\unix\lib\net5.0\Modules\Microsoft.PowerShell.Host\Microsoft.PowerShell.Host.psd1" />
-    <None Remove="C:\Users\danthom\.nuget\packages\microsoft.powershell.sdk\7.1.0\contentFiles\any\any\runtimes\unix\lib\net5.0\Modules\Microsoft.PowerShell.Management\Microsoft.PowerShell.Management.psd1" />
-    <None Remove="C:\Users\danthom\.nuget\packages\microsoft.powershell.sdk\7.1.0\contentFiles\any\any\runtimes\unix\lib\net5.0\Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1" />
-    <None Remove="C:\Users\danthom\.nuget\packages\microsoft.powershell.sdk\7.1.0\contentFiles\any\any\runtimes\unix\lib\net5.0\Modules\Microsoft.PowerShell.Utility\Microsoft.PowerShell.Utility.psd1" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.1.3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DbgProvider\DbgProvider.csproj" />
   </ItemGroup>
+
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+      <!-- This is hopefully temporary - responsible for fixing up bad layout.
+      -->
+    <Exec Command="powershell.exe -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command &quot;$LastExitCode = -1; . '$(ProjectDir)PostBuild.ps1' '$(ProjectDir)' '$(PlatformName)' '$(TargetDir)'; exit $LastExitCode&quot;" />
+  </Target>
 
   <!--
       Properties for building a "self-contained" app...
