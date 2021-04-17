@@ -244,4 +244,25 @@
       <AdditionalLibraryDirectories>$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
+
+  <PropertyGroup>
+    <BuildDependsOn>
+      $(BuildDependsOn);HydrateDotnetRuntime
+    </BuildDependsOn>
+
+    <CleanDependsOn>
+      $(CleanDependsOn);CleanStandaloneDotnet
+    </CleanDependsOn>
+  </PropertyGroup>
+
+  <Target Name="HydrateDotnetRuntime" Condition="!exists('$(TargetDir)\dotnet')">
+    <Message Importance="high" Text="Pulling in .NET runtime into dotnet dir."/>
+    <Exec Command="powershell.exe -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command &quot;$LastExitCode = -1; . '$(ProjectDir)HydrateDotNetRuntime.ps1' '$(ProjectDir)' '$(PlatformName)' '$(TargetDir)'; exit $LastExitCode&quot;" />
+  </Target>
+
+  <Target Name="CleanStandaloneDotnet">
+    <Message Importance="high" Text="Cleaning standalone dotnet runtime"/>
+    <RemoveDir Directories="$(TargetDir)\dotnet"/>
+  </Target>
+
 </Project>

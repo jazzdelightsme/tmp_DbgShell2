@@ -444,6 +444,82 @@ HRESULT SehWrapper( IDebugClient* debugClient, WCHAR* widenedArgs )
     return hr;
 }
 
+HRESULT _ConfigureDotNetRoot()
+{
+    // TODO: factor with _GetDbgShellBinaryPath
+    DWORD cch;
+
+    const DWORD cchPath = MAX_PATH + 1;
+    WCHAR* path = new WCHAR[ cchPath ];
+
+    //
+    // Get the path to the currently executing module (e.g. "C:\foo\bar\DbgShellExt.dll")
+    //
+    cch = GetModuleFileName( reinterpret_cast<HMODULE>( &__ImageBase ), path, cchPath );
+    if( 0 == cch )
+    {
+        wprintf( L"GetModuleFileName failed: %i\n", GetLastError() );
+        RaiseFailFastException( nullptr, 0, 0 );
+    }
+    else if( cch == cchPath )
+    {
+        DWORD dwErr = GetLastError();
+        if( dwErr == ERROR_INSUFFICIENT_BUFFER )
+        {
+            wprintf( L"We need a bigger buffer.\n" );
+            RaiseFailFastException( nullptr, 0, 0 );
+        }
+    }
+
+    //
+    // Rewind to last '\'
+    //
+    WCHAR* p = path + cch - 1; // points to last character
+    while( (*p != '\\') && (p > path) )
+        p--;
+
+    if( *p != '\\' )
+        RaiseFailFastException( nullptr, 0, 0 );
+
+    // Keep the '\'.
+    p++;
+
+    // Append "dotnet"
+    wcscpy_s( p, cchPath - (p - path), L"dotnet" );
+
+    // Make sure the var isn't already set by somebody else!
+
+    WCHAR junk[ MAX_PATH ] = { 0 };
+    DWORD dw = GetEnvironmentVariable( L"DOTNET_ROOT", junk, _countof( junk ) );
+
+    if( dw )
+    {
+        wprintf( L"DOTNET_ROOT is already defined!" );
+        // TODO: or maybe we should allow this? Better to wait until we have an actual
+        // scenario where we can try it out and see what happens.
+        return E_FAIL;
+    }
+
+    DWORD dwErr = GetLastError();
+    if( ERROR_ENVVAR_NOT_FOUND != dwErr )
+    {
+        HRESULT hr = HRESULT_FROM_WIN32( dwErr );
+        wprintf( L"Failure checking for existing DOTNET_ROOT environment variable: %#x\n", hr );
+        return hr;
+    }
+
+    BOOL bItWorked = SetEnvironmentVariable( L"DOTNET_ROOT", path );
+    if( !bItWorked )
+    {
+        dwErr = GetLastError();
+        HRESULT hr = HRESULT_FROM_WIN32( dwErr );
+        wprintf( L"Failed to set DOTNET_ROOT: %#x\n", hr );
+        return hr;
+    }
+
+    return S_OK;
+}
+
 
 // The "!dbgshell" extension command. The debugger knows about it by virtue of it being
 // exported.
@@ -460,9 +536,6 @@ HRESULT CALLBACK dbgshell( IDebugClient* debugClient, PCSTR args )
     {
         return help_worker( debugClient, /* chainToOtherHelpCommands = */ false );
     }
-
-    bool bItWorked = SetEnvironmentVariableW( L"DOTNET_ROOT", L"C:\\temp\\just_dotnet" );
-    //assert( bItWorked );
 
     g_entranceCount++;
 
@@ -520,6 +593,14 @@ HRESULT CALLBACK dbgshell( IDebugClient* debugClient, PCSTR args )
     {
         g_hostIsDbgShellExe = _IsHostDbgShellExe();
         g_pDbgShellExePath = _GetDbgShellBinaryPath();
+
+        hr = _ConfigureDotNetRoot();
+        if( FAILED( hr ) )
+        {
+            delete g_pDbgShellExePath;
+            g_pDbgShellExePath = nullptr;
+            goto Cleanup;
+        }
 
 		_RemoveMarkOfTheInternet( g_pDbgShellExePath );
 
