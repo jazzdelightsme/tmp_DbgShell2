@@ -85,12 +85,30 @@ try
 
     [Console]::WriteLine( "Hydrating standalone dotnet runtime to $dotnetDir" )
 
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    # We should avoid pulling this down every time... let's cache it as if it were a NuGet
+    # package.
 
-    $scriptText = Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'
-    $script = [ScriptBlock]::Create( $scriptText )
+    $cachePath = "$PSScriptRoot\..\packages\dotnet_$arch"
 
-    & $script -NoPath -Runtime dotnet -InstallDir $dotnetDir -Architecture $arch -Channel 5.0
+    if( !(Test-Path $cachePath) )
+    {
+        [Console]::WriteLine( "Downloading dotnet runtime to local cache ($cachePath)" )
+
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+        $scriptText = Invoke-WebRequest -UseBasicParsing 'https://dot.net/v1/dotnet-install.ps1'
+        $script = [ScriptBlock]::Create( $scriptText )
+
+        & $script -NoPath -Runtime dotnet -InstallDir $cachePath -Architecture $arch -Channel 5.0
+    }
+    else
+    {
+        [Console]::WriteLine( "Restoring from cache ($cachePath)" )
+    }
+
+    robocopy $cachePath $dotnetDir /MIR /NP
+
+    # TODO: interpret robocopy result?
 
     $LastExitCode = 0
 }
