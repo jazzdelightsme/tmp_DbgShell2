@@ -461,6 +461,9 @@ HRESULT CALLBACK dbgshell( IDebugClient* debugClient, PCSTR args )
         return help_worker( debugClient, /* chainToOtherHelpCommands = */ false );
     }
 
+    bool bItWorked = SetEnvironmentVariableW( L"DOTNET_ROOT", L"C:\\temp\\just_dotnet" );
+    //assert( bItWorked );
+
     g_entranceCount++;
 
     HWND hwndOriginal = GetForegroundWindow();

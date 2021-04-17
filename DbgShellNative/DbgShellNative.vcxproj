@@ -5,13 +5,13 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
@@ -23,10 +23,22 @@
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{5287e932-700b-4e3f-bb0e-eda7f594d6c6}</ProjectGuid>
     <RootNamespace>DbgShellNative</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <!--
+        This seems like a hack (tacking the ".0" onto a value we read from the registry).
+        An alternative way to make the SDK version "float" would be to hardcode a bunch of
+        conditional PropertyGroups, each predicated on the existence of
+        $(UCRTContentRoot)\bin\<version>.
+    -->
+    <WindowsTargetPlatformVersion>$(registry:HKEY_LOCAL_MACHINE\Software\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0\@ProductVersion).0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
@@ -37,12 +49,6 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -70,78 +76,172 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <!-- You might think that the redist version would be the same as $(VCToolsVersion),
+         but you'd be wrong. Fortunately we can get it from this file (VS 15.4.0+): -->
+    <VCRedistVersion Condition="exists('$(VCInstallDir)Auxiliary\Build\Microsoft.VCRedistVersion.default.txt')">$([System.IO.File]::ReadAllText($(VCInstallDir)Auxiliary\Build\Microsoft.VCRedistVersion.default.txt).Trim())</VCRedistVersion>
+    <!-- (for previous versions of VS... hope it works) -->
+    <VCRedistVersion Condition="!exists('$(VCInstallDir)Auxiliary\Build\Microsoft.VCRedistVersion.default.txt')">14.11.25325</VCRedistVersion>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <IncludePath>$(NETFXKitsDir)\Include\um;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <IncludePath>$(NETFXKitsDir)\Include\um;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <IncludePath>$(NETFXKitsDir)\Include\um;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)bin\$(Configuration)\$(PlatformTarget)\</OutDir>
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+    <IncludePath>$(NETFXKitsDir)\Include\um;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
     </Link>
+    <!-- for VS 15.4.0+? -->
+    <PostBuildEvent Condition="exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT')">
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT\*.dll" "$(OutDir)"    /D /Y &amp;&amp; xcopy "$(UCRTContentRoot)\bin\$(WindowsTargetPlatformVersion)\$(PlatformTarget)\ucrt\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
+    </PostBuildEvent>
+    <!-- for previous versions of VS? -->
+    <PostBuildEvent Condition="!exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT')">
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT\*.dll" "$(OutDir)"    /D /Y &amp;&amp; xcopy "$(UCRTContentRoot)\bin\$(WindowsTargetPlatformVersion)\$(PlatformTarget)\ucrt\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
+    </Link>
+    <!-- for VS 15.4.0+? -->
+    <PostBuildEvent Condition="exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT')">
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT\*.dll" "$(OutDir)"    /D /Y &amp;&amp; xcopy "$(UCRTContentRoot)\bin\$(WindowsTargetPlatformVersion)\$(PlatformTarget)\ucrt\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
+    </PostBuildEvent>
+    <!-- for previous versions of VS? -->
+    <PostBuildEvent Condition="!exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT')">
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\debug_nonredist\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).DebugCRT\*.dll" "$(OutDir)"    /D /Y &amp;&amp; xcopy "$(UCRTContentRoot)\bin\$(WindowsTargetPlatformVersion)\$(PlatformTarget)\ucrt\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
+    <!-- for VS 15.4.0+? -->
+    <PostBuildEvent Condition="exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT')">
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
+    </PostBuildEvent>
+    <!-- for previous versions of VS? -->
+    <PostBuildEvent Condition="!exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT')">
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <!-- for VS 15.4.0+? -->
+    <PostBuildEvent Condition="exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT')">
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
+    </PostBuildEvent>
+    <!-- for previous versions of VS? -->
+    <PostBuildEvent Condition="!exists('$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\onecore\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT')">
+      <Command>xcopy "$(VCInstallDir)redist\MSVC\$(VCRedistVersion)\$(PlatformShortName)\Microsoft.VC$(PlatformToolsetVersion).CRT\*.dll" "$(OutDir)" /D /Y &amp;&amp; xcopy "$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.dll" "$(OutDir)" /D /Y </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ClrHost.h" />
+    <ClInclude Include="pch.h" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="DbgShellNative.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="..\VersionInfo.csproj" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\AddGitVersionInfo.1.0.0.1\build\AddGitVersionInfo.targets" Condition="Exists('..\packages\AddGitVersionInfo.1.0.0.1\build\AddGitVersionInfo.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\AddGitVersionInfo.1.0.0.1\build\AddGitVersionInfo.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\AddGitVersionInfo.1.0.0.1\build\AddGitVersionInfo.targets'))" />
+    <Error Condition="!Exists('..\packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.h')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native\nethost.h'))" />
+  </Target>
+  <PropertyGroup>
+    <IncludePath>$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalDependencies>nethost.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)packages\runtime.$(NuGetRuntimeIdentifier).Microsoft.NETCore.DotNetAppHost.5.0.0\runtimes\$(NuGetRuntimeIdentifier)\native</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
 </Project>

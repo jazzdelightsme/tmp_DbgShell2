@@ -21,21 +21,29 @@
 
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <!-- This is hopefully temporary - responsible for fixing up bad layout.
+      <!-- Responsible for fixing up bad layout (the culprit is the PowerShell SDK).
       -->
     <Exec Command="powershell.exe -NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -Command &quot;$LastExitCode = -1; . '$(ProjectDir)PostBuild.ps1' '$(ProjectDir)' '$(PlatformName)' '$(TargetDir)'; exit $LastExitCode&quot;" />
   </Target>
 
   <!--
-      Properties for building a "self-contained" app...
+    Properties for building a "self-contained" app...
+
+    Oh... except wait... building an SCD won't work for us. :(
+
+    The problem is that the windbg extension scenario won't work. If we are an SCD, then
+    when we try to load the runtime (using the hostfxr library), we get an error:
+    "Initialization for self-contained components is not supported".
+
+    So we have to cobble together our own standalone runtime by other means.
   -->
   <PropertyGroup Condition="'$(Platform)'=='x64'">
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
-    <SelfContained>true</SelfContained>
+    <SelfContained>false</SelfContained>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Platform)'=='x86'">
     <RuntimeIdentifier>win10-x86</RuntimeIdentifier>
-    <SelfContained>true</SelfContained>
+    <SelfContained>false</SelfContained>
   </PropertyGroup>
 </Project>
